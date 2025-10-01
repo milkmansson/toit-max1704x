@@ -26,7 +26,7 @@ The two chip versions are the same family/register map.  The practical differenc
   - `read-cell-voltage` - Returns the cell voltage.
   - `read-cell-state-of-charge` - Reads the cell state of charge (often called SOC) in %.
   - `read-cell-charge-rate` - Gives cell charge-rate as % change per hour. -ve values mean 'discharging'.
-  - Various alerts, including those which would warn you microcontroller of a pending 'battery dead' event.
+  - Various alerts, including those which would warn the microcontroller of a pending 'battery dead' event.
 
 ### Alerts
 In this IC, alerts always latch.  Clear them with `clear-alert`.
