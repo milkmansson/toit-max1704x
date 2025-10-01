@@ -175,8 +175,8 @@ main:
   // Get/keep time Updated to help with display/testing.
   time-helper      = TimeHelper
   time-zone-helper = TimezoneHelper
-  time-zone-helper.update-data-from-internet
-  time-zone-helper.update-timezone
+  task:: time-zone-helper.update-data-from-internet
+  task:: time-zone-helper.update-timezone
   time-helper.maintain-system-time-via-ntp
   task:: update-screen
 

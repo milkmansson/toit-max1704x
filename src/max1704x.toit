@@ -405,6 +405,7 @@ class Max1704x:
   Sets the voltage the IC considers a 'reset'.  See README.md and/or Datasheet.
   */
   set-reset-voltage voltage/float -> none:
+    assert: 0 <= voltage <= 5.0                    // raw values 0..127 for 7 bit register
     value := (voltage / voltage-reset-lsb-v_).round
     write-register_ REG-VOLTAGE-RESET-ID_ --mask=VRESET-MASK_ --offset=VRESET-OFFSET_ --value=value
 
