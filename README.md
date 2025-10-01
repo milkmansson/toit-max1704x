@@ -22,6 +22,12 @@ The two chip versions are the same family/register map.  The practical differenc
 'ModelGauge' algorithm, I²C interface, alerts (VALRT, SOC threshold, 1% change), timing, register map, etc, all share the combined datasheet. Voltage resolution 1.25 mV/cell and typical accuracy ±7.5 mV/cell are the same.
 
 ## Modes/Features
+### Core Features
+  - `read-cell-voltage` - Returns the cell voltage.
+  - `read-cell-state-of-charge` - Reads the cell state of charge (often called SOC) in %.
+  - `read-cell-charge-rate` - Gives cell charge-rate as % change per hour. -ve values mean 'discharging'.
+  - Various alerts, including those which would warn you microcontroller of a pending 'battery dead' event.
+
 ### Alerts
 In this IC, alerts always latch.  Clear them with `clear-alert`.
 
