@@ -34,8 +34,8 @@ State of Charge threshold where an interrupt is generated (on the ALRT pin) for 
 ### Sleep Mode
 In sleep mode, the IC halts all operations, reducing current consumption to below 1μA. After exiting sleep mode, the IC continues normal operation. In sleep mode, the IC does not detect self-discharge. If the battery changes state while the IC sleeps, the IC cannot detect it, causing SOC error. Wake up the IC before charging or discharging. To enter sleep mode:
   - First Enable sleep mode (using `set-sleep-mode-enabled true`) and then either:
-    a. Hold SDA and SCL logic-low for a period for tSLEEP - A rising edge on SDA or SCL wakes up the IC.
-    b. Use the function `sleep-now` To wake up the IC use `wake-now`.  Other communication does not wake up the IC. (By default I2C communications would up the IC.)
+    - Hold SDA and SCL logic-low for a period for tSLEEP - A rising edge on SDA or SCL wakes up the IC.
+    - Use the function `sleep-now` To wake up the IC use `wake-now`.  Other communication does not wake up the IC. (By default I2C communications would up the IC.)
 Applications which can tolerate 4μA should use hibernate rather than sleep mode.
 
 ### Hibernation
@@ -66,7 +66,8 @@ and the following other experimental functions (calculations independent of the 
 - `estimate-mah-remaining`
 - `estimate-wh-remaining`
 - `estimate-hours-left` (estimated using charge rate percentage)
-With dynamic information (such as battery current):
+
+With dynamic information (such as battery current) the following are possible:
 - `estimate-hours-left` (estimated using current in amps)
 - `estimate-expected-crate-pct_per_hr` (requires current in amps)
 - `estimate-effective-capacity-mah` (requires current in amps)
