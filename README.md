@@ -2,7 +2,7 @@
 
 The MAX17048/MAX17049 ICs are tiny, micropower current fuel gauges for lithium-ion (Li+) batteries in handheld and portable equipment. The MAX17048 operates with a single lithium cell and the MAX17049 with two lithium cells in series.
 
-![Front and back of a module with a BH1750](images/adafruit-max17048.png)
+![Front and back of a module with a BH1750](images/adafruit-max17048.jpg)
 
 > [!WARNING]
 > The MAX17048 is powered by the connected battery, not by VIN or the STEMMA/QT connector.
