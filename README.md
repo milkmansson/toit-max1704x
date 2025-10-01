@@ -1,6 +1,6 @@
 # Toit Driver Library for MAX17048/MAX17049 Battery 'Fuel Gauge' IC.
 
-The MAX17048/MAX17049 ICs are tiny, micropower current fuel gauges for lithium-ion (Li+) batteries in handheld and portable equipment. The MAX17048 operates with a single lithium cell and the MAX17049 with two lithium cells in series.
+The MAX17048/MAX17049 ICs are tiny, micropower current fuel gauges for lithium-ion (Li+) batteries in handheld and portable equipment. The MAX17048 operates with a single lithium cell and the MAX17049 with two lithium cells in series. [Datasheet](https://www.analog.com/media/en/technical-documentation/data-sheets/max17048-max17049.pdf)
 
 ![Front and back of an Adafruit MAX17048 module](images/adafruit-max17048.jpg)
 
@@ -35,7 +35,7 @@ In this IC, alerts always latch.  Clear them with `clear-alert`.
 The host microcontroller is responsible for measuring battery temperature periodically.  The datasheet states that for best performance, the RCOMP ModelGauge parameter must be adjusted at least once per minute. (Datasheet page 8.)  This can be done using `set-temperature-compensation` - battery temperature must be given in celsius.  (Also see RCOMP)
 
 ### SOC Alert Threshold
-A threshold of the State of Charge (%) where an interrupt is generated (on the ALRT pin) once the charge drops below the set level.  This is for the purposes of alerting a microcontroller, such that it has the opportunity to get ready for the pending power off event.  The function 'set-SOC-empty-alert-threshold' and 'get-SOC-empty-alert-threshold' are used for this.  Valid values are from 32% down to 1%.
+A threshold of the State of Charge (%) where an interrupt is generated (on the ALRT pin) once the charge drops below the set level.  This is for the purposes of alerting a microcontroller, such that it has the opportunity to get ready for the pending power off event.  The function `set-SOC-empty-alert-threshold` and `get-SOC-empty-alert-threshold` are used for this.  Valid values are from 32% down to 1%.
 
 ### Sleep Mode
 In sleep mode, the IC halts all operations, reducing current consumption to below 1μA. After exiting sleep mode, the IC continues normal operation. In sleep mode, the IC does not detect self-discharge. If the battery changes state while the IC sleeps, the IC cannot detect it, causing SOC error. Wake up the IC before charging or discharging. To enter sleep mode:
