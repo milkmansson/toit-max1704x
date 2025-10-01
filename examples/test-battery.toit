@@ -8,7 +8,6 @@ import gpio
 import i2c
 
 import bme280
-
 import ssd1306 show *
 import pixel-display show *
 import pixel-display.two-color show *
@@ -39,8 +38,42 @@ This example uses the following I2C based components:
   - SSD1306 for displaying the results throughout the test
   - An ESP32 of choice - in my case DFRobot ESP32c6 Beetle with battery pins
   - INA226 (Optional - for validating results).
-  - TP4057 (Optional - my ESP32 has one of these charging IC's onboard).
+  - BH1740 (Optional - to cause load.  Results changing readily giving visual
+    feedback of operation.
+  - TP4057 (Optional - my ESP32 has one of these charging IC's onboard.
+    Constant display of these values side by side helped give credibility to
+    the values it generated when writing that driver.
 
+Wiring:
+  - Place the battery into the JST connector on the MAX17048.
+  - Connect the +ve of the other JST connector to the +IN of the INA226.
+  - Connect the -ve of the other JST connector to ESP32 GND
+  - Connect -IN of the INA226 to the 5v VIN on the ESP32.
+  - Tie the IN- and the VBUS of the INA226 together.
+  - For the rest of the modules, connect their VIN and GND to the 3v3
+    and GND on the ESP32 as per usual.
+  - Connect the SCL and SDA's as per usual, for all devices as well.
+
+Display:
+  As the code is written here, the lines of output show:
+  1. Title
+  2. Current Time and HH:MM:SS since test start
+  3. voltage, SOC and charge rate, from the MAX1704x
+  4. voltage and estimated SOC, from the TP4057.  Ambient lux from the
+  5. Temperature, Air Pressure and Humidity, from BME280
+  6. Battery supply voltage, current, and watts given by INA226
+
+Other Notes:
+  In an attempt to ensure everything would still work with missing modules
+  and display intelligent things if something took a while to start, you will
+  see that most things are defined as global variables, and the display update
+  process is executed in a task.  (Definitely not advertising these as good
+  practices in normal circumstances!)
+
+Usage:
+  - I used this test to show the battery level and did a complete charge cycle
+    which took a few days with this load and my battery (a 3700mAh 13.7Wh
+    cell from Em3)
 
 */
 
