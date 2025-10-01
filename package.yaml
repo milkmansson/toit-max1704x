@@ -1,0 +1,4 @@
+name: max1704x
+description: Support for MAX17048/MAX17049 I2C base LiPo battery gauge IC.
+environment:
+  sdk: ^2.0.0-alpha.188
