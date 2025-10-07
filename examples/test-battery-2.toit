@@ -1,4 +1,3 @@
-
 // Copyright (C) 2025 Toit Contributors
 // Use of this source code is governed by a Zero-Clause BSD license that can
 // be found in the EXAMPLES_LICENSE file.
@@ -6,6 +5,7 @@
 import system
 import gpio
 import i2c
+import esp32
 
 import bme280
 import ssd1306 show *
@@ -18,11 +18,11 @@ import font-x11-adobe.sans-08-bold
 
 //import ublox-gnss as ublox-gnss
 
-import ..src.max1704x show *
-import ...toit-ina226.src.ina226 show *
-import ...toit-tp4057.src.tp4057 show *
-import ...toit-timehelper.src.timehelper show *
-import ...toit-bh1750.src.bh1750 show *
+import max1704x show *
+import ina226 show *
+import tp4057 show *
+import timehelper show *
+import bh1750 show *
 
 /**
 Battery Display Test
@@ -99,8 +99,9 @@ bme280-driver   := null
 bh1750-driver   := null
 max1704x-driver := null
 
-ic-label/Label := ?
-uptime-label/Label := ?
+info0-l/Label := ?
+info0-c/Label := ?
+info0-r/Label := ?
 vcell-label/Label := ?
 soc-label/Label := ?
 soc-rate-label/Label := ?
@@ -112,9 +113,9 @@ info2-l/Label := ?
 info2-c/Label := ?
 info2-r/Label := ?
 
-volts/Label   := ?
-amps/Label    := ?
-watts/Label   := ?
+info3-l/Label := ?
+info3-c/Label := ?
+info3-r/Label := ?
 
 header/Label  := ?
 
@@ -163,11 +164,12 @@ main:
   [
     Label --x=64 --y=10 --id="header"  --style=style-sans-08-bc,
 
-    Label --x=0 --y=20 --id="ic"       --style=style-sans-08-l,
-    Label --x=128 --y=20 --id="uptime" --style=style-sans-08-r,
+    Label --x=0 --y=20 --id="info0-l" --style=style-sans-08-l,
+    Label --x=64 --y=20 --id="info0-c" --style=style-sans-08-c,
+    Label --x=128 --y=20 --id="info0-r" --style=style-sans-08-r,
 
-    Label --x=0 --y=30 --id="vcell"      --style=style-sans-08-l,
-    Label --x=58 --y=30 --id="soc"       --style=style-sans-08-c,
+    Label --x=0 --y=30 --id="vcell" --style=style-sans-08-l,
+    Label --x=58 --y=30 --id="soc" --style=style-sans-08-c,
     Label --x=128 --y=30 --id="soc-rate" --style=style-sans-08-r,
 
     Label --x=0 --y=40 --id="info1-l" --style=style-sans-08-l,
@@ -175,16 +177,18 @@ main:
     Label --x=128 --y=40 --id="info1-r" --style=style-sans-08-r,
 
     Label --x=0 --y=50 --id="info2-l" --style=style-sans-08-l,
-    Label --x=70 --y=50 --id="info2-c" --style=style-sans-08-c,
+    Label --x=64 --y=50 --id="info2-c" --style=style-sans-08-c,
     Label --x=128 --y=50 --id="info2-r" --style=style-sans-08-r,
 
-    Label --x=0  --y=64 --id="volts"   --style=style-sans-08-l,
-    Label --x=64   --y=64 --id="amps"  --style=style-sans-08-c,
-    Label --x=128 --y=64 --id="watts"  --style=style-sans-08-r,
+    Label --x=0  --y=60 --id="info3-l"   --style=style-sans-08-l,
+    Label --x=64   --y=60 --id="info3-c"  --style=style-sans-08-c,
+    Label --x=128 --y=60 --id="info3-r"  --style=style-sans-08-r,
   ].do: pixel-display.add it
 
-  ic-label = pixel-display.get-element-by-id "ic"
-  uptime-label = pixel-display.get-element-by-id "uptime"
+  info0-l = pixel-display.get-element-by-id "info0-l"
+  info0-c = pixel-display.get-element-by-id "info0-c"
+  info0-r = pixel-display.get-element-by-id "info0-r"
+
   vcell-label = pixel-display.get-element-by-id "vcell"
   soc-label = pixel-display.get-element-by-id "soc"
   soc-rate-label = pixel-display.get-element-by-id "soc-rate"
@@ -196,9 +200,9 @@ main:
   info2-c = pixel-display.get-element-by-id "info2-c"
   info2-r = pixel-display.get-element-by-id "info2-r"
 
-  volts   = pixel-display.get-element-by-id "volts"
-  amps    = pixel-display.get-element-by-id "amps"
-  watts   = pixel-display.get-element-by-id "watts"
+  info3-l = pixel-display.get-element-by-id "info3-l"
+  info3-c = pixel-display.get-element-by-id "info3-c"
+  info3-r = pixel-display.get-element-by-id "info3-r"
 
   header  = pixel-display.get-element-by-id "header"
 
@@ -219,7 +223,6 @@ main:
   else:
     ina226-driver = Ina226 (bus.device Ina226.I2C-ADDRESS)
     ina226-driver.set-sampling-rate Ina226.AVERAGE-1024-SAMPLES
-    ina226-driver.set-shunt-resistor 0.100
   task:: update-screen
 
   // Setup TP4057 - comment out if not present.
@@ -253,6 +256,7 @@ main:
     max1704x-driver = Max1704x (bus.device Max1704x.I2C_ADDRESS)
     max1704x-driver.set-design-capacity-mah 3700.0
     max1704x-driver.set-design-capacity-wh 13.7
+    max1704x-driver.set-sleep-mode-enabled true
 
   task:: update-screen-task
 
@@ -262,15 +266,16 @@ update-screen-task -> none:
     sleep --ms=250
 
 update-screen -> none:
+  cell-charge-rate/float := 0.0
+  info0-c.text = "$(us-to-stopwatch time-start-us Time.monotonic-us)"
   if time-helper != null:
-    ic-label.text          = "$(time-helper.current-time)"
-    uptime-label.text      = "$(us-to-stopwatch time-start-us Time.monotonic-us)"
+    info0-l.text = "$(time-helper.current-time)"
   else:
-    uptime-label.text      = "$(us-to-stopwatch time-start-us Time.monotonic-us)"
+
 
   if max1704x-driver != null:
     if time-helper == null:
-      ic-label.text          = "IC:$(%02d max1704x-driver.get-chip-version).$(%02d max1704x-driver.get-chip-id)"
+      info0-l.text        = "IC:$(%02d max1704x-driver.get-chip-version).$(%02d max1704x-driver.get-chip-id)"
     vcell-label.text       = "$(%0.3f max1704x-driver.read-cell-voltage)v"
     soc-label.text         = "$(%0.2f max1704x-driver.read-cell-state-of-charge)%"
     soc-rate-label.text    = "$(%0.2f max1704x-driver.read-cell-charge-rate)%/h"
@@ -280,34 +285,49 @@ update-screen -> none:
     soc-rate-label.text    = "-"
 
   if bme280-driver != null:
-    info2-l.text           = "$(%0.1f bme280-driver.read-temperature)°C"
-    info2-c.text           = "$(%0.4f bme280-driver.read-pressure * 0.01 / 1000)b"
-    info2-r.text           = "$(%0.1f bme280-driver.read-humidity)%"
+    info3-l.text           = "$(%0.1f bme280-driver.read-temperature)°C"
+    info3-c.text           = "$(%0.4f bme280-driver.read-pressure * 0.01 / 1000)b"
+    info3-r.text           = "$(%0.1f bme280-driver.read-humidity)%"
   else:
-    info2-l.text           = "[No bme280]"
-    info2-c.text           = "-"
-    info2-r.text           = "-"
+    info3-l.text           = "[No bme280]"
+    info3-c.text           = "-"
+    info3-r.text           = "-"
 
   if (tp4057-driver != null):
-    info1-l.text           = "$(%0.3f tp4057-driver.read-voltage)v"
-    info1-c.text           = "$(%0.2f tp4057-driver.estimate-state-of-charge * 100)%"
+    info2-l.text           = "$(%0.3f tp4057-driver.read-voltage)v"
+    info2-c.text           = "$(%0.2f tp4057-driver.estimate-state-of-charge)%"
   else:
-    info1-l.text           = "[No tp4057]"
-    info1-l.text           = "-"
+    info2-l.text           = "[No tp4057]"
+    info2-l.text           = "-"
 
   if (bh1750-driver != null):
-    info1-r.text           = "$(%0.2f bh1750-driver.read-lux)lx"
+    info0-r.text           = "$(%0.2f bh1750-driver.read-lux)lx"
   else:
-    info1-r.text           = "[No bh1750]"
+    //info2-r.text           = "[No bh1750]"
 
   if ina226-driver != null:
-    volts.text    = "$(%0.3f ina226-driver.read-supply-voltage)v"
-    amps.text     = "$(%0.3f ina226-driver.read-shunt-current)a"
-    watts.text    = "$(%0.3f ina226-driver.read-load-power)w"
+    info1-l.text = "$(%0.3f ina226-driver.read-supply-voltage)v"
+    info1-c.text = "$(%0.3f ina226-driver.read-shunt-current)a"
+    info1-r.text = "$(%0.3f ina226-driver.read-load-power)w"
   else:
-    volts.text    = "[No INA226 found]"
-    amps.text     = "-"
-    watts.text    = "-"
+    if max1704x-driver != null:
+      if max1704x-driver.is-hibernating:
+        info1-l.text = "HIB"
+      else:
+        info1-l.text = "hib"
+
+      info1-c.text = "$(%0.1f max1704x-driver.estimate-mah-remaining)m/r"
+      cell-charge-rate = max1704x-driver.read-cell-charge-rate
+      if max1704x-driver.read-cell-charge-rate == 0.0:
+        info1-r.text = "-"
+      else if max1704x-driver.read-cell-charge-rate < 0.0:
+        info1-r.text = "$(%0.1f max1704x-driver.estimate-hours-left)hr/r"
+      else:
+        info1-r.text = "$(%0.1f max1704x-driver.estimate-hours-to-full --current-a=0.250)hr/f"
+    else:
+      info1-l.text = "[No INA226 found]"
+      info1-c.text = "-"
+      info1-r.text = "-"
 
   pixel-display.draw
 

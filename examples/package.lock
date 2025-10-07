@@ -1,0 +1,82 @@
+sdk: ^2.0.0-alpha.176
+prefixes:
+  bh1750: toit-bh1750
+  bme280: bme280-driver
+  font_x11_adobe: pkg-font-x11-adobe
+  ina226: toit-ina226
+  max1704x: ..
+  pixel_display: toit-pixel-display
+  ssd1306: toit-ssd1306
+  timehelper: toit-timehelper
+  tp4057: toit-tp4057
+packages:
+  ..:
+    path: ..
+  bme280-driver:
+    url: github.com/toitware/bme280-driver
+    name: bme280
+    version: 1.1.0
+    hash: e2220d286aad8bbb78e27ffcbf558cbec0e1c687
+  pkg-font-x11-adobe:
+    url: github.com/toitlang/pkg-font-x11-adobe
+    name: font_x11_adobe
+    version: 0.1.0
+    hash: f844400722165252148f087cdf189abab0a47f3d
+  pkg-http:
+    url: github.com/toitlang/pkg-http
+    name: http
+    version: 2.11.0
+    hash: d2cdc57270eaafe8df8d8403bf4ebf95415aa0fd
+  pkg-ntp:
+    url: github.com/toitlang/pkg-ntp
+    name: ntp
+    version: 1.1.0
+    hash: e69bb1abc0d3d4aa7642eec3360e52744e4d011d
+  toit-bh1750:
+    path: ../../toit-bh1750
+  toit-cat24c32:
+    url: github.com/toitware/toit-cat24c32
+    name: cat24c32
+    version: 1.0.1
+    hash: 036d3f401003724aa46f16ded2cb2889b672844f
+  toit-cert-roots:
+    url: github.com/toitware/toit-cert-roots
+    name: certificate-roots
+    version: 1.11.0
+    hash: c117dbba4757d7c69e91af7a875ab6989f051a33
+  toit-ds3231:
+    url: github.com/pkarsy/toit-ds3231
+    name: ds3231
+    version: 1.1.0
+    hash: 98e6b3d666c429352640c09e8fc91013ef063be1
+  toit-ina226:
+    path: ../../toit-ina226
+  toit-pixel-display:
+    url: github.com/toitware/toit-pixel-display
+    name: pixel_display
+    version: 2.11.0
+    hash: 59a4be9f0e6aa2321c6a032da44776f59af364b5
+    prefixes:
+      png-tools: toit-png-tools
+  toit-png-tools:
+    url: github.com/toitware/toit-png-tools
+    name: png-tools
+    version: 1.0.0
+    hash: ee472ac9d4333a138206f9d3a817d3c5432d6f87
+  toit-ssd1306:
+    url: github.com/toitware/toit-ssd1306
+    name: ssd1306
+    version: 2.0.1
+    hash: ee2e6e699daa86d961538775aaea642a839025b7
+    prefixes:
+      pixel_display: toit-pixel-display
+  toit-timehelper:
+    path: ../../toit-timehelper
+    prefixes:
+      cat24c32: toit-cat24c32
+      certificate-roots: toit-cert-roots
+      ds3231: toit-ds3231
+      http: pkg-http
+      ntp: pkg-ntp
+  toit-tp4057:
+    path: ../../toit-tp4057

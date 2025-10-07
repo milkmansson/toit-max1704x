@@ -1,0 +1,23 @@
+dependencies:
+  bh1750:
+    path: ../../toit-bh1750/
+  bme280:
+    url: github.com/toitware/bme280-driver
+    version: ^1.1.0
+  font_x11_adobe:
+    url: github.com/toitlang/pkg-font-x11-adobe
+    version: ^0.1.0
+  ina226:
+    path: ../../toit-ina226/
+  max1704x:
+    path: ..
+  pixel_display:
+    url: github.com/toitware/toit-pixel-display
+    version: ^2.11.0
+  ssd1306:
+    url: github.com/toitware/toit-ssd1306
+    version: ^2.0.1
+  timehelper:
+    path: ../../toit-timehelper/
+  tp4057:
+    path: ../../toit-tp4057/

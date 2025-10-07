@@ -41,86 +41,69 @@ class Max1704x:
 
   // For use with $REG-MODE_
   static MODE-QUICK-START-MODE-MASK_   ::= 0b01000000_00000000
-  static MODE-QUICK-START-MODE-OFFSET_ ::= 14
   static MODE-SLEEP-ENABLED-MASK_      ::= 0b00100000_00000000
-  static MODE-SLEEP-ENABLED-OFFSET_    ::= 13
   static MODE-HIBERNATING-MASK_        ::= 0b00010000_00000000
-  static MODE-HIBERNATING-OFFSET_      ::= 12
 
   // For use with $REG-CONFIG_
   static CHEMISTRY-RCOMP-MASK_         ::= 0b11111111_00000000
-  static CHEMISTRY-RCOMP-OFFSET_       ::= 8
   static SLEEP-MASK_                   ::= 0b00000000_10000000
-  static SLEEP-OFFSET_                 ::= 7
   static ALERT-SOC-CHANGE-MASK_        ::= 0b00000000_01000000   // Alert flag for state-of-charge change
-  static ALERT-SOC-CHANGE-OFFSET_      ::= 6
   static ALERT-MASK_                   ::= 0b00000000_00100000   // Alert flag equal to pin operation
-  static ALERT-OFFSET_                 ::= 5
   static EMPTY-ALERT-THRESHOLD-MASK_   ::= 0b00000000_00011111   // Alerts that cell is empty below the threshold.
-  static EMPTY-ALERT-THRESHOLD-OFFSET_ ::= 0
 
   // For use with VRESET/ID Register (0x18)
-  static VRESET-MASK_                                ::= 0b11111110_00000000
-  static VRESET-OFFSET_                              ::= 9
-  static HIBERNATE-DISABLE-ANALOG-COMPARATOR-MASK_   ::= 0b00000001_00000000
-  static HIBERNATE-DISABLE-ANALOG-COMPARATOR-OFFSET_ ::= 8
-  static CHIP-ID-MASK_                               ::= 0b00000000_11111111
-  static CHIP-ID-OFFSET_                             ::= 0
+  static VRESET-MASK_                  ::= 0b11111110_00000000
+  static HIBERNATE-DIS-ANALOG-CO-MASK_ ::= 0b00000001_00000000
+  static CHIP-ID-MASK_                 ::= 0b00000000_11111111
 
   // For use with $REG-HIBERNATE-
-  static HIBERNATE-HIB-THRESHOLD-MASK_   ::= 0b11111111_00000000
-  static HIBERNATE-HIB-THRESHOLD-OFFSET_ ::= 8
-  static HIBERNATE-ACT-THRESHOLD-MASK_   ::= 0b00000000_11111111
-  static HIBERNATE-ACT-THRESHOLD-OFFSET_ ::= 0
+  static HIBERNATE-HIB-THRESHOLD-MASK_ ::= 0b11111111_00000000
+  static HIBERNATE-ACT-THRESHOLD-MASK_ ::= 0b00000000_11111111
 
   // For use with $REG-VOLTAGE-ALERT_
-  static ALERT-VOLTAGE-MIN-MASK_         ::= 0b11111111_00000000
-  static ALERT-VOLTAGE-MIN-OFFSET_       ::= 8
-  static ALERT-VOLTAGE-MAX-MASK_         ::= 0b00000000_11111111
-  static ALERT-VOLTAGE-MAX-OFFSET_       ::= 0
+  static ALERT-VOLTAGE-MIN-MASK_       ::= 0b11111111_00000000
+  static ALERT-VOLTAGE-MAX-MASK_       ::= 0b00000000_11111111
 
   // For use with $REG-STATUS_
-  static STATUS-RESET-INDICATOR-MASK_    ::= 0b00000001_00000000  // Set when unconfigured, no model loaded.
-  static STATUS-RESET-INDICATOR-OFFSET_  ::= 8
-  static STATUS-VOLTAGE-HIGH-MASK_       ::= 0b00000010_00000000  // V(cell) above ALRT.VALRTMAX.
-  static STATUS-VOLTAGE-LOW-MASK_        ::= 0b00000100_00000000  // V(cell) below ALRT.VALRTMIN.
-  static STATUS-VOLTAGE-RESET-MASK_      ::= 0b00001000_00000000  // Set if device has been reset (if EnVr is set).
-  static STATUS-SOC-RATE-LOW-MASK_       ::= 0b00010000_00000000  // Set when SOC crosses the value in CONFIG.ATHD.
-  static STATUS-SOC-CHANGE-MASK_         ::= 0b00100000_00000000  // Set when SOC changes by at least 1% (if CONFIG.ALSC is set)
-  static VRESET-ALERT-ENABLE-MASK_       ::= 0b01000000_00000000  // Enable or Disable VRESET Alert
-  static VRESET-ALERT-ENABLE-OFFSET_     ::= 14
+  static STATUS-RESET-INDICATOR-MASK_  ::= 0b00000001_00000000  // Set when unconfigured, no model loaded.
+  static STATUS-VOLTAGE-HIGH-MASK_     ::= 0b00000010_00000000  // V(cell) above ALRT.VALRTMAX.
+  static STATUS-VOLTAGE-LOW-MASK_      ::= 0b00000100_00000000  // V(cell) below ALRT.VALRTMIN.
+  static STATUS-VOLTAGE-RESET-MASK_    ::= 0b00001000_00000000  // Set if device has been reset (if EnVr is set).
+  static STATUS-SOC-RATE-LOW-MASK_     ::= 0b00010000_00000000  // Set when SOC crosses the value in CONFIG.ATHD.
+  static STATUS-SOC-CHANGE-MASK_       ::= 0b00100000_00000000  // Set when SOC changes by at least 1% (if CONFIG.ALSC is set)
+  static VRESET-ALERT-ENABLE-MASK_     ::= 0b01000000_00000000  // Enable or Disable VRESET Alert
 
-  static soc-rate-lsb_                   ::= 0.00390625    // 1% / 256  LSB
-  static cell-voltage-lsb_               ::= 0.000078125   // 78.125 µV/LSB (i.e., 78.125e-6)
-  static charge-rate-lsb-pct_            ::= 0.208         //  0.208% / LSB
-  static hibernation-lsb-v_              ::= 0.00125       //  1.25mv / LSB
-  static voltage-alert-lsb-v_            ::= 0.02          // 20mV / LSB
-  static voltage-reset-lsb-v_            ::= 0.04          // 40mV    / LSB
+  static soc-rate-lsb_                 ::= 0.00390625    // 1% / 256  LSB
+  static cell-voltage-lsb_             ::= 0.000078125   // 78.125 µV/LSB (i.e., 78.125e-6)
+  static charge-rate-lsb-pct_          ::= 0.208         //  0.208% / LSB
+  static hibernation-lsb-v_            ::= 0.00125       //  1.25mv / LSB
+  static voltage-alert-lsb-v_          ::= 0.02          // 20mV / LSB
+  static voltage-reset-lsb-v_          ::= 0.04          // 40mV    / LSB
 
   // For use with RCOMP tuning parameters
-  static RCOMP0                          ::= 0x97
-  static TEMP-COMPENSATION-UP            ::= -0.5
-  static TEMP-COMPENSATION-DOWN          ::= -5.0
+  static RCOMP0                        ::= 0x97
+  static TEMP-COMPENSATION-UP          ::= -0.5
+  static TEMP-COMPENSATION-DOWN        ::= -5.0
 
   // Class private variables
-  reg_/registers.Registers     := ?
-  logger_/log.Logger           := ?
+  reg_/registers.Registers := ?
+  logger_/log.Logger := ?
 
 
-  constructor dev/serial.Device --logger/log.Logger=(log.default.with-name "max1704x"):
-    logger_ = logger
+  constructor dev/serial.Device --logger/log.Logger=log.default:
+    logger_ = logger.with-name "max1704x"
     reg_ = dev.registers
 
   /**
   $reset:
 
   Writing a value of 0x5400 to this register causes the device to completely
-  reset as if power had been removed (see the Power-On Reset (POR) section). The
-  reset occurs when the last bit has been clocked in. The IC does not respond
-  with an I2C ACK after this command sequence.
+   reset as if power had been removed (see the Power-On Reset (POR) section).
+   The reset occurs when the last bit has been clocked in. The IC does not
+   respond with an I2C ACK after this command sequence.
   */
   reset -> none:
-    write-register_ REG-CMD_ --value=POWER-ON-RESET-VALUE_
+    write-register_ REG-CMD_ POWER-ON-RESET-VALUE_
     sleep --ms=250
 
     clear-reset-indicator_
@@ -135,14 +118,14 @@ class Max1704x:
   Returns True or False based on whether the Reset Indicator is tripped
   */
   get-reset-indicator_ -> bool:
-    out := read-register_ REG-STATUS_ --mask=STATUS-RESET-INDICATOR-MASK_ --offset=STATUS-RESET-INDICATOR-OFFSET_
+    out := read-register_ REG-STATUS_ --mask=STATUS-RESET-INDICATOR-MASK_
     return (out == 1)
 
   /**
   Returns True or False based on whether the Reset Indicator is tripped
   */
   clear-reset-indicator_ -> none:
-    write-register_ REG-STATUS_ --mask=STATUS-RESET-INDICATOR-MASK_ --offset=STATUS-RESET-INDICATOR-OFFSET_ --value=0
+    write-register_ REG-STATUS_ 0 --mask=STATUS-RESET-INDICATOR-MASK_
 
   /**
   Gets Chip Version.  Indicates the production version of the IC
@@ -156,10 +139,10 @@ class Max1704x:
   Gets Chip ID. (Datasheet pp13).
 
   Value that is one-time program-mable at the factory, which can be used as
-  an identifier to distinguish multiple cell types in production.
+   an identifier to distinguish multiple cell types in production.
   */
   get-chip-id -> int:
-    out := read-register_ REG-VOLTAGE-RESET-ID_ --mask=CHIP-ID-MASK_ --offset=CHIP-ID-OFFSET_
+    out := read-register_ REG-VOLTAGE-RESET-ID_ --mask=CHIP-ID-MASK_
     //logger_.debug "get-ic-version: returned $(bits-16 out)"
     return out
 
@@ -167,7 +150,7 @@ class Max1704x:
   Gets RCOMP values from the IC. (See Datasheet and README.md)
   */
   get-rcomp-value -> int:
-    out := read-register_ REG-CONFIG_ --mask=CHEMISTRY-RCOMP-MASK_ --offset=CHEMISTRY-RCOMP-OFFSET_
+    out := read-register_ REG-CONFIG_ --mask=CHEMISTRY-RCOMP-MASK_
     logger_.debug "get-rcomp-value: returned $(%04x out)"
     return out
 
@@ -175,7 +158,7 @@ class Max1704x:
   Sets RCOMP values in the IC. (See Datasheet and README.md)
   */
   set-rcomp-value value/int -> none:
-    write-register_ REG-CONFIG_ --mask=CHEMISTRY-RCOMP-MASK_ --offset=CHEMISTRY-RCOMP-OFFSET_ --value=value
+    write-register_ REG-CONFIG_ value --mask=CHEMISTRY-RCOMP-MASK_
 
   /**
   Sets Temperature Compensation in the IC.
@@ -194,30 +177,30 @@ class Max1704x:
   Determines if an alert exists.
 
   When this bit is set, the ALRT pin asserts (is low). Use clear-alert to de-assert
-  the ALRT pin. The STATUS register specifies why the ALRT pin was asserted
+   the ALRT pin. The STATUS register specifies why the ALRT pin was asserted
   */
   alert -> bool:
-    out := read-register_ REG-CONFIG_ --mask=ALERT-MASK_ --offset=ALERT-OFFSET_
-    return (out == 1)
+    out := read-register_ REG-CONFIG_ --mask=ALERT-MASK_
+    return out == 1
 
   /**
   Clears an alert by the IC when an alert occurs.
   */
   clear-alert -> none:
-    write-register_ REG-CONFIG_ --mask=ALERT-MASK_ --offset=ALERT-OFFSET_ --value=0
+    write-register_ REG-CONFIG_ 0 --mask=ALERT-MASK_
 
   /**
   Sets the 'SOC is empty now' alert threshold.  See README.md
   */
   set-SOC-empty-alert-threshold threshold/int -> none:
     assert: 0 < threshold < 32
-    write-register_  REG-CONFIG_ --mask=EMPTY-ALERT-THRESHOLD-MASK_ --offset=EMPTY-ALERT-THRESHOLD-OFFSET_ --value=(32 - threshold)
+    write-register_  REG-CONFIG_ (32 - threshold) --mask=EMPTY-ALERT-THRESHOLD-MASK_
 
   /**
   Gets the 'SOC is empty now' alert threshold.  See README.md
   */
   get-SOC-empty-alert-threshold -> int:
-    out := read-register_ REG-CONFIG_ --mask=EMPTY-ALERT-THRESHOLD-MASK_ --offset=EMPTY-ALERT-THRESHOLD-OFFSET_
+    out := read-register_ REG-CONFIG_ --mask=EMPTY-ALERT-THRESHOLD-MASK_
     return (32 - out)
 
   /**
@@ -227,10 +210,15 @@ class Max1704x:
   */
   set-sleep-mode-enabled enabled/bool=false -> none:
     value := (enabled ? 1 : 0)
-    write-register_ REG-MODE_ --mask=MODE-SLEEP-ENABLED-MASK_ --offset=MODE-SLEEP-ENABLED-OFFSET_ --value=value
+    write-register_ REG-MODE_ value --mask=MODE-SLEEP-ENABLED-MASK_
 
+  /**
+  Whether the device has the ability to enter ultra-low-power sleep mode.
+
+  Use True to enable sleep mode (1uA draw) - False to only allow hibernation
+  */
   get-sleep-mode-enabled -> bool:
-    value := read-register_ REG-MODE_ --mask=MODE-SLEEP-ENABLED-MASK_ --offset=MODE-SLEEP-ENABLED-OFFSET_
+    value := read-register_ REG-MODE_ --mask=MODE-SLEEP-ENABLED-MASK_
     return (value == 1)
 
   /**
@@ -238,9 +226,9 @@ class Max1704x:
 
   Requires Sleep Mode be enabled beforehand.
   */
-  sleep-now -> none:
+  force-sleep-now -> none:
     if get-sleep-mode-enabled:
-      write-register_ REG-CONFIG_ --mask=SLEEP-MASK_ --offset=SLEEP-OFFSET_ --value=1
+      write-register_ REG-CONFIG_ 1 --mask=SLEEP-MASK_
     else:
       logger_.error "sleep-now: Cannot sleep now as sleep mode not enabled."
 
@@ -249,9 +237,9 @@ class Max1704x:
 
   Requires Sleep Mode be enabled beforehand.
   */
-  wake-now -> none:
+  force-wake-now -> none:
     if get-sleep-mode-enabled:
-      write-register_ REG-CONFIG_ --mask=SLEEP-MASK_ --offset=SLEEP-OFFSET_ --value=0
+      write-register_ REG-CONFIG_ 0 --mask=SLEEP-MASK_
     else:
       logger_.error "sleep-now: Cannot sleep now as sleep mode not enabled."
 
@@ -261,14 +249,14 @@ class Max1704x:
   set-hibernation-act-threshold volts/float -> none:
     assert: 0 <= volts <= 0.31874
     value := volts / hibernation-lsb-v_
-    write-register_ REG_HIBERNATE_ --mask=HIBERNATE-ACT-THRESHOLD-MASK_ --offset=HIBERNATE-ACT-THRESHOLD-OFFSET_ --value=value
+    write-register_ REG_HIBERNATE_ value --mask=HIBERNATE-ACT-THRESHOLD-MASK_
 
   /**
   Get hibernation activity threshold. See README.md or Datasheet.
   */
   get-hibernation-act-threshold -> float:
-    value := read-register_ REG_HIBERNATE_ --mask=HIBERNATE-ACT-THRESHOLD-MASK_ --offset=HIBERNATE-ACT-THRESHOLD-OFFSET_
-    return (value * hibernation-lsb-v_)
+    value := read-register_ REG_HIBERNATE_ --mask=HIBERNATE-ACT-THRESHOLD-MASK_
+    return value * hibernation-lsb-v_
 
   /**
   Sets hibernate threshold: the %/hour change triggering hibernation of the IC.
@@ -276,14 +264,14 @@ class Max1704x:
   set-hibernation-hib-threshold percent/float -> none:
     assert: 0 <= percent <= 53
     value := (percent / charge-rate-lsb-pct_).round
-    write-register_ REG_HIBERNATE_ --mask=HIBERNATE-HIB-THRESHOLD-MASK_ --offset=HIBERNATE-HIB-THRESHOLD-OFFSET_ --value=value
+    write-register_ REG_HIBERNATE_ value --mask=HIBERNATE-HIB-THRESHOLD-MASK_
 
   /**
   Gets hibernate threshold: the %/hour change triggering hibernation of the IC.
   */
   get-hibernation-hib-threshold -> float:
-    value := read-register_ REG_HIBERNATE_ --mask=HIBERNATE-HIB-THRESHOLD-MASK_ --offset=HIBERNATE-HIB-THRESHOLD-OFFSET_
-    return (value * charge-rate-lsb-pct_)
+    value := read-register_ REG_HIBERNATE_ --mask=HIBERNATE-HIB-THRESHOLD-MASK_
+    return value * charge-rate-lsb-pct_
 
   /**
   Sets the hibernate mode to be disabled:
@@ -295,51 +283,67 @@ class Max1704x:
     set-hibernation-act-threshold 0.0
     set-hibernation-hib-threshold 0.0
 
+  /**
+  Sets the hibernate mode to be forced on, with maximum settings:
+
+  Datasheet states that setting both hibernation registers to maximum will
+    'enable' hibernation.  The device will be configured t its maximum values.
+    [See Datasheet pp.12]
+  */
   set-hibernate-mode-enabled -> none:
     set-hibernation-act-threshold (0xFF).to-float
     set-hibernation-hib-threshold (0xFF).to-float
 
   /**
+  Whether hibernate mode is enabled:
+
+  */
+  get-hibernate-mode-enabled -> bool:
+    act-t := get-hibernation-act-threshold
+    hib-t := get-hibernation-hib-threshold
+    return (act-t > 0) and (hib-t > 0)
+
+  /**
   Sets the Analog Comparator for Hibernation.  See README.md and Datasheet.
   */
   set-hibernate-analog-comparator-enabled enabled/bool=false -> none:
-    value := (enabled ? 0 : 1)
-    write-register_ REG-VOLTAGE-RESET-ID_ --mask=HIBERNATE-DISABLE-ANALOG-COMPARATOR-MASK_ --offset=HIBERNATE-DISABLE-ANALOG-COMPARATOR-OFFSET_ --value=value
+    value := enabled ? 0 : 1
+    write-register_ REG-VOLTAGE-RESET-ID_ value --mask=HIBERNATE-DIS-ANALOG-CO-MASK_
 
   /**
   Get Analog Comparator setting for Hibernation.  See README.md and Datasheet.
   */
   get-hibernate-analog-comparator-enabled -> bool:
-    value := read-register_ REG-VOLTAGE-RESET-ID_ --mask=HIBERNATE-DISABLE-ANALOG-COMPARATOR-MASK_ --offset=HIBERNATE-DISABLE-ANALOG-COMPARATOR-OFFSET_
-    return (value == 0)
+    value := read-register_ REG-VOLTAGE-RESET-ID_ --mask=HIBERNATE-DIS-ANALOG-CO-MASK_
+    return value == 0
 
   /**
   Sets alert-min voltage - Alerts when V(cell) < V(alert-min).
   */
   set-voltage-alert-min voltage/float -> none:
     value := (voltage / voltage-alert-lsb-v_).round
-    write-register_ REG-VOLTAGE-ALERT_ --mask=ALERT-VOLTAGE-MIN-MASK_ --offset=ALERT-VOLTAGE-MIN-OFFSET_ --value=value
+    write-register_ REG-VOLTAGE-ALERT_ value --mask=ALERT-VOLTAGE-MIN-MASK_
 
   /**
   Returns configured alert-min voltage.
   */
   get-voltage-alert-min -> float:
-    value := read-register_ REG-VOLTAGE-ALERT_ --mask=ALERT-VOLTAGE-MIN-MASK_ --offset=ALERT-VOLTAGE-MIN-OFFSET_
-    return (value * voltage-alert-lsb-v_)
+    value := read-register_ REG-VOLTAGE-ALERT_ --mask=ALERT-VOLTAGE-MIN-MASK_
+    return value * voltage-alert-lsb-v_
 
   /**
   Sets the alert-max voltage - Alerts when V(cell) > V(alert-max).
   */
   set-voltage-alert-max voltage/float -> none:
     value := (voltage / voltage-alert-lsb-v_).round
-    write-register_ REG-VOLTAGE-ALERT_ --mask=ALERT-VOLTAGE-MAX-MASK_ --offset=ALERT-VOLTAGE-MAX-OFFSET_ --value=value
+    write-register_ REG-VOLTAGE-ALERT_ value --mask=ALERT-VOLTAGE-MAX-MASK_
 
   /**
   Returns configured alert-max voltage.
   */
   get-voltage-alert-max -> float:
-    value := read-register_ REG-VOLTAGE-ALERT_ --mask=ALERT-VOLTAGE-MAX-MASK_ --offset=ALERT-VOLTAGE-MAX-OFFSET_
-    return (value * voltage-alert-lsb-v_)
+    value := read-register_ REG-VOLTAGE-ALERT_ --mask=ALERT-VOLTAGE-MAX-MASK_
+    return value * voltage-alert-lsb-v_
 
   /**
   Enables voltage reset alert.
@@ -349,11 +353,11 @@ class Max1704x:
   */
   set-vreset-alert-enabled enabled/bool=false -> none:
     value := (enabled ? 1 : 0)
-    write-register_ REG-STATUS_ --mask=VRESET-ALERT-ENABLE-MASK_ --offset=VRESET-ALERT-ENABLE-OFFSET_ --value=value
+    write-register_ REG-STATUS_ value --mask=VRESET-ALERT-ENABLE-MASK_
 
   get-vreset-alert-enabled -> bool:
-    value := read-register_ REG-STATUS_ --mask=VRESET-ALERT-ENABLE-MASK_ --offset=VRESET-ALERT-ENABLE-OFFSET_
-    return (value == 1)
+    value := read-register_ REG-STATUS_ --mask=VRESET-ALERT-ENABLE-MASK_
+    return value == 1
 
   /**
   $check-status: checks a status flag against the current alert register.
@@ -375,21 +379,21 @@ class Max1704x:
   */
   read-cell-charge-rate -> float:
     raw/int := reg_.read-i16-be REG-CHARGE-RATE_
-    return (raw * charge-rate-lsb-pct_)
+    return raw * charge-rate-lsb-pct_
 
   /**
   Reads the cell voltage (in Volts).
   */
   read-cell-voltage -> float:
     raw/int := read-register_ REG-CELL-VOLTAGE_
-    return (raw * cell-voltage-lsb_)
+    return raw * cell-voltage-lsb_
 
   /**
   Reads the cell state of charge (in %)
   */
   read-cell-state-of-charge -> float:
     value/int := read-register_ REG-SOC_
-    return (value * soc-rate-lsb_)
+    return value * soc-rate-lsb_
 
   /**
   Checks if the MAX1704x is ready to be read from (True/False).
@@ -400,6 +404,20 @@ class Max1704x:
   is-ready -> bool:
     return get-chip-version != 0xFFFF
 
+  /**
+  Whether the device is currently hibernating.
+  */
+  is-hibernating -> bool:
+    raw := read-register_ REG-MODE_ --mask=MODE-HIBERNATING-MASK_
+    return raw == 1
+
+  /**
+  Execute a 'Quickstart'.
+
+  Use with caution.  See README.md, and Datasheet page 9.
+  */
+  set-quickstart -> none:
+    write-register_ REG-MODE_ 1 --mask=MODE-QUICK-START-MODE-MASK_
 
   /**
   Sets the voltage the IC considers a 'reset'.  See README.md and/or Datasheet.
@@ -407,13 +425,13 @@ class Max1704x:
   set-reset-voltage voltage/float -> none:
     assert: 0 <= voltage <= 5.0                    // raw values 0..127 for 7 bit register
     value := (voltage / voltage-reset-lsb-v_).round
-    write-register_ REG-VOLTAGE-RESET-ID_ --mask=VRESET-MASK_ --offset=VRESET-OFFSET_ --value=value
+    write-register_ REG-VOLTAGE-RESET-ID_ value --mask=VRESET-MASK_
 
   /**
   Gets the voltage the IC considers a 'reset'.  See README.md and/or Datasheet.
   */
   get-reset-voltage -> float:
-    value := read-register_ REG-VOLTAGE-RESET-ID_ --mask=VRESET-MASK_ --offset=VRESET-OFFSET_
+    value := read-register_ REG-VOLTAGE-RESET-ID_ --mask=VRESET-MASK_
     return (value * voltage-reset-lsb-v_)
 
   /**
@@ -459,8 +477,8 @@ class Max1704x:
     return read-cell-state-of-charge / charge-rate-pct.abs
 
   /**
-  If a current meter (such as INA226, INA219 or INA3221) can measure the current
-  of the battery, further information can also be derived.
+  If a current meter (such as INA226, INA219 or INA3221) can measure and provide
+  the current of the battery, further information can also be derived.
   */
   estimate-hours-left --current-a/float -> float:
     assert: design-capacity-mah_ > 0.0
@@ -490,38 +508,40 @@ class Max1704x:
     return (missing-mAh / current-ma) * 1.2               // 1.2 fudge for taper
 
   /**
-  Reads a register - unsigned 16 bit big-endian.  Handles Mask and Offset.
+  Reads the given register with the supplied mask.
 
-  If the mask is left at 0xFFFF and offset at 0x0, it is a read from the whole register.
+  Given that register reads are largely similar, implemented here. If the mask
+   is left at 0xFFFF and offset at 0x0, it is treated as a read from the whole
+   register.
   */
-  read-register_ register/int --mask/int=0xFFFF --offset/int=0 -> any:
-    register-value := reg_.read-u16-be register
+  read-register_ register/int --mask/int=0xFFFF --offset/int=(mask.count-trailing-zeros) -> any:
+    raw-value := reg_.read-u16-be register
     if mask == 0xFFFF and offset == 0:
-      return register-value
+      return raw-value
     else:
-      masked-value := (register-value & mask) >> offset
+      masked-value := (raw-value & mask) >> offset
       return masked-value
 
   /**
-  Writes a register - unsigned 16 bit big-endian.  Handles Mask and Offset.
+  Writes the given register with the supplied mask.
 
-  If the mask is left at 0xFFFF and offset at 0x0, it is a write to the whole register.
+  Given that register writes are largely similar, it is implemented here.  If
+   the mask is left at 0xFFFF and offset at 0x0, it is treated as a write to the
+   whole register.
   */
-  write-register_ register/int --mask/int=0xFFFF --offset/int=0 --value/any --note/string="" -> none:
-    max/int := mask >> offset                // allowed value range within field
-    assert: ((value & ~max) == 0)            // value fits the field
-    old-value/int := reg_.read-u16-be register
+  write-register_ register/int value/any --mask/int=0xFFFF --offset/int=(mask.count-trailing-zeros) -> none:
+    // find allowed value range within field
+    max/int := mask >> offset
+    // check the value fits the field
+    assert: ((value & ~max) == 0)
 
-    // Split out the simple case
     if (mask == 0xFFFF) and (offset == 0):
       reg_.write-u16-be register (value & 0xFFFF)
-      //logger_.debug "write-register_: Register 0x$(%02x register) set from $(%04x old-value) to $(%04x value) $(note)"
     else:
-      new-value/int := old-value
+      new-value/int := reg_.read-u16-be register
       new-value     &= ~mask
       new-value     |= (value << offset)
       reg_.write-u16-be register new-value
-      //logger_.debug "write-register_: Register 0x$(%02x register) set from $(bits-16 old-value) to $(bits-16 new-value) $(note)"
 
   /**
   Display bitmasks nicely - useful when testing.
@@ -531,17 +551,14 @@ class Max1704x:
       out-string := "$(%b x)"
       out-string = out-string.pad --left 16 '0'
       out-string = "$(out-string[0..4]).$(out-string[4..8]).$(out-string[8..12]).$(out-string[12..16])"
-      //logger_.debug "bits-16: 16 $(x) $(%0b x) gave $(out-string)"
       return out-string
     else if (x > 15) or (min-display-bits > 4):
       out-string := "$(%b x)"
       out-string = out-string.pad --left 8 '0'
       out-string = "$(out-string[0..4]).$(out-string[4..8])"
-      //logger_.debug "bits-16: 08 $(x) $(%0b x) gave $(out-string)"
       return out-string
     else:
       out-string := "$(%b x)"
       out-string = out-string.pad --left 4 '0'
       out-string = "$(out-string[0..4])"
-      //logger_.debug "bits-16: 04 $(x) $(%0b x) gave $(out-string)"
       return out-string
