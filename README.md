@@ -8,7 +8,8 @@ series.
 
 ![Front and back of an Adafruit MAX17048 module](images/adafruit-max17048.jpg)
 
-> [!WARNING] The MAX17048 is powered by the connected battery, not by VIN or the
+> [!WARNING]
+> The MAX17048 is powered by the connected battery, not by VIN or the
 > STEMMA/QT connector.  If no battery is plugged in, or the battery is too low,
 > the MAX17048 will not respond to I2C scans or commands.
 
@@ -146,7 +147,8 @@ Other information can be made available if extra static and dynamic values are
 supplied.  Static values such as battery designcapacities (mAh & Wh) or dynamic
 values such as measuring the current at the battery (eg, using an IC like the
 INA226).
-> [!IMPORTANT] The following functions are created somewhat experimentally.  The
+> [!IMPORTANT]
+> The following functions are created somewhat experimentally.  The
 > health and actual capacities of batteries change over time, as well as actual
 > values varying by things like temperature and stress.  Please consider these
 > experimental in nature.
