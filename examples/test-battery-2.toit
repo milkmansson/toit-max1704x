@@ -199,10 +199,14 @@ main:
   info2-l = pixel-display.get-element-by-id "info2-l"
   info2-c = pixel-display.get-element-by-id "info2-c"
   info2-r = pixel-display.get-element-by-id "info2-r"
+  info2-l.text = "-"
+  info2-r.text = "-"
 
   info3-l = pixel-display.get-element-by-id "info3-l"
   info3-c = pixel-display.get-element-by-id "info3-c"
   info3-r = pixel-display.get-element-by-id "info3-r"
+  info3-l.text = "-"
+  info3-r.text = "-"
 
   header  = pixel-display.get-element-by-id "header"
 
@@ -219,7 +223,7 @@ main:
 
   // Setup INA226 (if present) - to validate measured values.
   if not scandevices.contains Ina226.I2C-ADDRESS:
-    print "No INA226 device found"
+    print "No ina226 device found"
   else:
     ina226-driver = Ina226 (bus.device Ina226.I2C-ADDRESS)
     ina226-driver.set-sampling-rate Ina226.AVERAGE-1024-SAMPLES
@@ -267,7 +271,7 @@ update-screen-task -> none:
 
 update-screen -> none:
   cell-charge-rate/float := 0.0
-  info0-c.text = "$(us-to-stopwatch time-start-us Time.monotonic-us)"
+  info0-r.text = "$(us-to-stopwatch time-start-us Time.monotonic-us)"
   if time-helper != null:
     info0-l.text = "$(time-helper.current-time)"
   else:
@@ -290,7 +294,6 @@ update-screen -> none:
     info3-r.text           = "$(%0.1f bme280-driver.read-humidity)%"
   else:
     info3-l.text           = "[No bme280]"
-    info3-c.text           = "-"
     info3-r.text           = "-"
 
   if (tp4057-driver != null):
@@ -301,9 +304,9 @@ update-screen -> none:
     info2-l.text           = "-"
 
   if (bh1750-driver != null):
-    info0-r.text           = "$(%0.2f bh1750-driver.read-lux)lx"
+    info2-r.text           = "$(%0.2f bh1750-driver.read-lux)lx"
   else:
-    //info2-r.text           = "[No bh1750]"
+    info2-r.text           = "-"
 
   if ina226-driver != null:
     info1-l.text = "$(%0.3f ina226-driver.read-supply-voltage)v"
@@ -325,8 +328,7 @@ update-screen -> none:
       else:
         info1-r.text = "$(%0.1f max1704x-driver.estimate-hours-to-full --current-a=0.250)hr/f"
     else:
-      info1-l.text = "[No INA226 found]"
-      info1-c.text = "-"
+      info1-l.text = "[No ina226]"
       info1-r.text = "-"
 
   pixel-display.draw
