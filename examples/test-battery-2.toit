@@ -261,7 +261,7 @@ main:
     max1704x-driver.set-design-capacity-mah 3700.0
     max1704x-driver.set-design-capacity-wh 13.7
     max1704x-driver.set-sleep-mode-enabled true
-
+    max1704x-driver.set-quickstart
   task:: update-screen-task
 
 update-screen-task -> none:
