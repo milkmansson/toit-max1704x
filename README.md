@@ -175,7 +175,7 @@ With dynamic information (such as battery current) the following are possible:
 ## Usage
 Please see the examples folder.
 
-## Not Implemented (yet)/To Do:
+## Not Implemented:
 - **Table Registers:**  The datasheet states that "default value is appropriate
   for some Li+ batteries". They also suggest further model optimisation can be
   made using Table registers, and RCOMP values.  Direct contact with
@@ -195,3 +195,19 @@ If there are any issues, changes, or any other kind of feedback, please
 - This driver has been written and tested with a MAX17048.
 - All trademarks belong to their respective owners.
 - No warranties for this work, express or implied.
+
+## Credits
+- [Florian](https://github.com/floitsch) for the tireless help and encouragement
+- The wider Toit developer team (past and present) for a truly excellent product
+- AI has been used for code and text reviews, analysing and compiling data and
+  results, and assisting with ensuring accuracy.
+
+## About Toit
+One would assume you are here because you know what Toit is.  If you dont:
+> Toit is a high-level, memory-safe language, with container/VM technology built
+> specifically for microcontrollers (not a desktop language port). It gives fast
+> iteration (live reloads over Wi-Fi in seconds), robust serviceability, and
+> performance that’s far closer to C than typical scripting options on the
+> ESP32. [[link](https://toitlang.org/)]
+- [Review on Soracom](https://soracom.io/blog/internet-of-microcontrollers-made-easy-with-toit-x-soracom/)
+- [Review on eeJournal](https://www.eejournal.com/article/its-time-to-get-toit)
