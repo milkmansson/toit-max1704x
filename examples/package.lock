@@ -2,6 +2,7 @@ sdk: ^2.0.0-alpha.176
 prefixes:
   bh1750: toit-bh1750
   bme280: bme280-driver
+  ema: toit-ema
   font_x11_adobe: pkg-font-x11-adobe
   ina226: toit-ina226
   max1704x: ..
@@ -34,6 +35,8 @@ packages:
     hash: e69bb1abc0d3d4aa7642eec3360e52744e4d011d
   toit-bh1750:
     path: ../../toit-bh1750
+    prefixes:
+      ema: toit-ema
   toit-cat24c32:
     url: github.com/toitware/toit-cat24c32
     name: cat24c32
@@ -49,6 +52,8 @@ packages:
     name: ds3231
     version: 1.1.0
     hash: 98e6b3d666c429352640c09e8fc91013ef063be1
+  toit-ema:
+    path: ../../toit-ema
   toit-ina226:
     path: ../../toit-ina226
   toit-pixel-display:
@@ -80,3 +85,5 @@ packages:
       ntp: pkg-ntp
   toit-tp4057:
     path: ../../toit-tp4057
+    prefixes:
+      ema: toit-ema
