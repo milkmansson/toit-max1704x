@@ -1,18 +1,16 @@
-sdk: ^2.0.0-alpha.176
+sdk: ^2.0.0-alpha.188
 prefixes:
   bh1750: toit-bh1750
   bme280: bme280-driver
   ema: toit-ema
   font_x11_adobe: pkg-font-x11-adobe
   ina226: toit-ina226
-  max1704x: ..
+  max1704x: toit-max1704x
   pixel_display: toit-pixel-display
   ssd1306: toit-ssd1306
   timehelper: toit-timehelper
   tp4057: toit-tp4057
 packages:
-  ..:
-    path: ..
   bme280-driver:
     url: github.com/toitware/bme280-driver
     name: bme280
@@ -34,7 +32,10 @@ packages:
     version: 1.1.0
     hash: e69bb1abc0d3d4aa7642eec3360e52744e4d011d
   toit-bh1750:
-    path: ../../toit-bh1750
+    url: github.com/milkmansson/toit-bh1750
+    name: bh1750
+    version: 1.1.0
+    hash: e6108519a541436edf3ab6a20008c1e82e23653e
     prefixes:
       ema: toit-ema
   toit-cat24c32:
@@ -53,9 +54,20 @@ packages:
     version: 1.1.0
     hash: 98e6b3d666c429352640c09e8fc91013ef063be1
   toit-ema:
-    path: ../../toit-ema
+    url: github.com/milkmansson/toit-ema
+    name: ema
+    version: 1.0.0
+    hash: 352b4998688fbbf5a740d3471c2fe5457aa3225e
   toit-ina226:
-    path: ../../toit-ina226
+    url: github.com/milkmansson/toit-ina226
+    name: ina226
+    version: 1.0.0
+    hash: 7399003f2bc340de60fe7311b667eefb2fcf3c3e
+  toit-max1704x:
+    url: github.com/milkmansson/toit-max1704x
+    name: max1704x
+    version: 1.0.0
+    hash: cd7593ef8f5d5d89860577b360ca535ab85589c8
   toit-pixel-display:
     url: github.com/toitware/toit-pixel-display
     name: pixel_display
@@ -84,6 +96,9 @@ packages:
       http: pkg-http
       ntp: pkg-ntp
   toit-tp4057:
-    path: ../../toit-tp4057
+    url: github.com/milkmansson/toit-tp4057
+    name: tp4057
+    version: 1.0.0
+    hash: 98a7760360409d194de12b6beac63d082c594518
     prefixes:
       ema: toit-ema
