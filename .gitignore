@@ -1,5 +1,8 @@
 ## For more: https://github.com/github/gitignore
 
+## Reference
+.reference/
+
 ## Toit 
 .packages/
 .jaguar

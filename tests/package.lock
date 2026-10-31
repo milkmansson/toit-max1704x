@@ -1,0 +1,6 @@
+sdk: ^2.0.0-alpha.188
+prefixes:
+  max1704x: toit-max1704x
+packages:
+  toit-max1704x:
+    path: ..
