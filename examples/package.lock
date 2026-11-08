@@ -5,7 +5,7 @@ prefixes:
   ema: github.com/milkmansson/toit-ema-1
   font_x11_adobe: github.com/toitlang/pkg-font-x11-adobe-0
   ina226: github.com/milkmansson/toit-ina226-1
-  max1704x: github.com/milkmansson/toit-max1704x-1
+  max1704x: toit-max1704x
   pixel_display: github.com/toitware/toit-pixel-display-2
   ssd1306: github.com/toitware/toit-ssd1306-2
   tp4057: github.com/milkmansson/toit-tp4057-1
@@ -23,10 +23,6 @@ packages:
   github.com/milkmansson/toit-ina226-1:
     hash: 7399003f2bc340de60fe7311b667eefb2fcf3c3e
     url: github.com/milkmansson/toit-ina226
-    version: 1.0.0
-  github.com/milkmansson/toit-max1704x-1:
-    hash: cd7593ef8f5d5d89860577b360ca535ab85589c8
-    url: github.com/milkmansson/toit-max1704x
     version: 1.0.0
   github.com/milkmansson/toit-tp4057-1:
     hash: 98a7760360409d194de12b6beac63d082c594518
@@ -58,3 +54,5 @@ packages:
       pixel_display: github.com/toitware/toit-pixel-display-2
     url: github.com/toitware/toit-ssd1306
     version: 2.0.1
+  toit-max1704x:
+    path: ..
