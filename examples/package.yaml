@@ -14,17 +14,14 @@ dependencies:
   ina226:
     url: github.com/milkmansson/toit-ina226
     version: ^1.0.0
-  max1704x:
-    url: github.com/milkmansson/toit-max1704x
-    version: ^1.0.0
   pixel_display:
     url: github.com/toitware/toit-pixel-display
     version: ^2.11.0
   ssd1306:
     url: github.com/toitware/toit-ssd1306
     version: ^2.0.1
-  timehelper:
-    path: ../../toit-timehelper
   tp4057:
     url: github.com/milkmansson/toit-tp4057
     version: ^1.0.0
+  max1704x:
+    path: ../

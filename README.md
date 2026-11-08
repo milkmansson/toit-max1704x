@@ -25,6 +25,12 @@ differences are how they are wired and powered.
 * Built for two lithium cells (in series). ("2S" packs).
 * Powered by VDD - I2C pins can tolerate 3.3 up to 5.5 V (while VDD=2.5–4.5 V, as per datasheet)
 * Senses on CELL - measurement range 5–10 V (pack voltage).
+Pass `--variant=Max1704x.VARIANT-MAX17049` to the constructor for this part.
+The VCELL register reports per-cell units (78.125 μV/LSB), so the driver doubles
+it and `read-cell-voltage` returns the whole pack voltage.  The alert and reset
+voltage thresholds (`set-voltage-alert-*`, `set-reset-voltage`) are written
+using the same per-register scaling for both parts; check the datasheet before
+relying on them with the MAX17049.
 ### Similarities
 'ModelGauge' algorithm, I²C interface, alerts (VALRT, SOC threshold, 1% change),
 timing, register map, etc, all share the combined datasheet. Voltage resolution
@@ -48,15 +54,28 @@ The host microcontroller is responsible for measuring battery temperature
 periodically.  The datasheet states that for best performance, the RCOMP
 ModelGauge parameter must be adjusted at least once per minute. (Datasheet page
 8.)  This can be done using `set-temperature-compensation` - battery temperature
-must be given in celsius.  (Also see RCOMP)
+must be given in celsius.  The value is always calculated from the default RCOMP
+(0x97), so calling it repeatedly does not drift.  `calculate-rcomp` returns the
+value without writing it.  (Also see RCOMP)
 
 ### SOC Alert Threshold
 A threshold of the State of Charge (%) where an interrupt is generated (on the
 ALRT pin) once the charge drops below the set level.  This is for the purposes
 of alerting a microcontroller, such that it has the opportunity to get ready for
-the pending power off event.  The function `set-SOC-empty-alert-threshold` and
-`get-SOC-empty-alert-threshold` are used for this.  Valid values are from 32%
-down to 1%.
+the pending power off event.  The function `set-soc-empty-alert-threshold` and
+`get-soc-empty-alert-threshold` are used for this.  Valid values are from 32%
+down to 1%; anything else throws `OUT_OF_RANGE`.  `set-soc-change-alert-enabled`
+additionally raises an alert whenever SOC changes by 1%.
+
+### Status Flags
+`check-status` takes one of the public `Max1704x.STATUS-*` constants
+(`STATUS-RESET-INDICATOR`, `STATUS-VOLTAGE-HIGH`, `STATUS-VOLTAGE-LOW`,
+`STATUS-VOLTAGE-RESET`, `STATUS-SOC-LOW`, `STATUS-SOC-CHANGE`).  Clear flags
+with `clear-status-flags`.
+
+### Range Checking
+Setters convert to the register's units and throw `OUT_OF_RANGE` if the result
+does not fit the register field, rather than writing into neighbouring fields.
 
 ### Sleep Mode
 In sleep mode, the IC halts all operations, reducing current consumption to
@@ -66,10 +85,10 @@ the IC sleeps, the IC cannot detect it, causing SOC error. Wake up the IC before
 charging or discharging. To enter sleep mode:
   - First Enable sleep mode (using `set-sleep-mode-enabled true`)
   - Second, either:
-    - **Bus Low Method:** Hold SDA and SCL logic-low for a period for appx 2.5s.
+    - **Bus Low Method:** Hold SDA and SCL logic-low for longer than tSLEEP (1.75–2.5s).
       A rising edge on SDA or SCL wakes up the IC.
-    - **Register Method:** Using the function `sleep-now`, or wake using
-      `wake-now`.  (These functions write the register).  In this situation,
+    - **Register Method:** Using the function `force-sleep-now`, or wake using
+      `force-wake-now`.  (These functions write the register).  In this situation,
       other communication does not wake up the IC.  Applications which can
       tolerate 4μA should use hibernate rather than sleep mode.
 
@@ -95,9 +114,10 @@ hibernate mode.
   application with a bursty use, eg turning on a radio or something.  This value
   would be set to ensure that hibernation would not be disturbed by those
   expected voltage drops.
-- Hibernate mode can be completely disabled with `set-hibernate-mode-disabled`.
-  To enable hibernation again, either use `set-hibernate-mode-enabled` or set
-  the thresholds.
+- Hibernate mode can be completely disabled with `set-hibernate-mode-disabled`
+  (writes 0x0000 to the register).  `set-hibernate-mode-enabled` writes 0xFFFF,
+  which makes the IC hibernate always.  To return to normal operation, set the
+  two thresholds.
 
 ### Hibernation Analog Comparator
 Adjusts a fast analog comparator and a slower digital ADC threshold to detect
@@ -106,7 +126,7 @@ battery removal and reinsertion.  If the comparator is enabled, the IC resets
 after the V(cell) register rises above the threshold. [See the Datasheet]
 Hibernation Analog Comparator can be enabled/disabled using
 `set-hibernate-analog-comparator-enabled` and
-`get-hibernate-analog-comparator-enabled`.  Set TRUE to disable the analog
+`get-hibernate-analog-comparator-enabled`.  Set FALSE to disable the analog
 comparator in hibernate mode, saving approximately 0.5μA.
 
 ### Battery Swap Detection/Voltage Cutoff
@@ -114,8 +134,8 @@ If the cell voltage drops below a certain level (battery out or truly flat) and
 later rises above it, the MAX17048 resets/quick-starts, so the old battery's SoC
 estimate doesn't pollute the new one. With the comparator enabled, wake happens
 ~1 ms after VCELL rises past VRST (otherwise ~250 ms after the ADC reading rises
-past it).  Set using `set-reset-voltage` and `get-reset-voltage`.  Values
-between 0.00 and 5.00.  Use cases:
+past it).  Set using `set-reset-voltage` and `get-reset-voltage`.  The datasheet
+guarantees 2.28–3.48 V in 40 mV steps (the driver accepts 0.00–5.08 V).  Use cases:
 - Captive (non-removable) battery: Set this value to 2.5 V.
 - Removable battery: Set to ≥ 300 mV below the "empty" cutoff (e.g., if 3.3 V
   should be treated as empty, choose appx 3.0 V)
@@ -166,14 +186,35 @@ the IC) are possible:
 - `estimate-hours-left` (estimated using charge rate percentage)
 
 With dynamic information (such as battery current) the following are possible:
-- `estimate-hours-left` (estimated using current in amps)
+- `estimate-hours-left` (estimated using current in amps; sign ignored)
 - `estimate-expected-crate-pct_per_hr` (requires current in amps)
 - `estimate-effective-capacity-mah` (requires current in amps)
 - `estimate-state-of-health` (requires current in amps)
-- `estimate-hours-to-full` (requires current in amps)
+- `estimate-hours-to-full` (requires current in amps, positive when charging)
+
+Currents are always in amps, capacities in mAh.  The effective capacity and
+state of health return `null` when the charge rate is too close to zero to give
+a meaningful answer, and the hours estimates return 1e9 when the battery is not
+discharging (or charging, for `estimate-hours-to-full`).  Unset design
+capacities throw an error.
 
 ## Usage
-Please see the examples folder.
+Please see the examples folder:
+- `simple-battery.toit`: prints voltage, state of charge and charge rate.  Needs
+  only the MAX1704x.
+- `alerts.toit`: sets the alert thresholds, trips one, and clears it.
+- `power-modes.toit`: hibernation and sleep.
+- `estimates.toit`: remaining capacity and run time estimates.
+- `temperature-compensation.toit`: sets RCOMP from the battery temperature.
+- `test-battery-2.toit`: a long running battery test using a display and other
+  sensors.  See the comments in the file.
+
+The examples take the pins from the `SDA-PIN` and `SCL-PIN` constants (19 and 20
+for the DFRobot FireBeetle 2 ESP32-C6).  Change them for other boards.
+
+## Tests
+`tests/max1704x-test.toit` runs against a simulated register bank, so no
+hardware is needed: `cd tests && toit pkg install && toit run max1704x-test.toit`.
 
 ## Not Implemented:
 - **Table Registers:**  The datasheet states that "default value is appropriate
@@ -192,7 +233,6 @@ If there are any issues, changes, or any other kind of feedback, please
 [raise an issue](toit-max1704x/issues).
 
 ## Disclaimer
-- This driver has been written and tested with a MAX17048.
 - All trademarks belong to their respective owners.
 - No warranties for this work, express or implied.
 

@@ -21,7 +21,6 @@ import font-x11-adobe.sans-08-bold
 import max1704x show *
 import ina226 show *
 import tp4057 show *
-import timehelper show *
 import bh1750 show *
 
 /**
@@ -57,7 +56,7 @@ Wiring:
 Display:
   As the code is written here, the lines of output show:
   1. Title
-  2. Current Time and HH:MM:SS since test start
+  2. MAX1704x chip version and ID, and HH:MM:SS since test start
   3. voltage, SOC and charge rate, from the MAX1704x
   4. voltage and estimated SOC, from the TP4057.  Ambient lux from the
   5. Temperature, Air Pressure and Humidity, from BME280
@@ -84,13 +83,12 @@ ESP32-INTERRUPT-PIN         ::= 33
 ESP32C6-SDA-PIN             ::= 19
 ESP32C6-SCL-PIN             ::= 20
 ESP32C6-PWR-LED-PIN         ::= 15
+ESP32C6-BATTERY-ADC-PIN     ::= 0
 ESP32C6-RX                  ::= 17
 ESP32C6-TX                  ::= 16
 
 time-start-us/int   := Time.monotonic-us
 
-time-helper     := null
-time-zone-helper:= null
 ssd1306-device  := null
 ssd1306-driver  := null
 pixel-display   := null
@@ -122,22 +120,20 @@ header/Label  := ?
 tp4057-driver/Tp4057? := null
 
 main:
-  sda-pin-number      := 0
-  scl-pin-number      := 0
+  sda-pin/int := ?
+  scl-pin/int := ?
 
   // Rudimentary pin selection for my two devices
   if system.architecture == "esp32c6":
     // Beetle pins
-    sda-pin-number = ESP32C6-SDA-PIN
-    scl-pin-number = ESP32C6-SCL-PIN
+    sda-pin = ESP32C6-SDA-PIN
+    scl-pin = ESP32C6-SCL-PIN
   else:
-    sda-pin-number = ESP32-SDA-PIN
-    scl-pin-number = ESP32-SCL-PIN
+    sda-pin = ESP32-SDA-PIN
+    scl-pin = ESP32-SCL-PIN
 
   // Initialise I2C
   frequency := 400_000
-  sda-pin := gpio.Pin sda-pin-number
-  scl-pin := gpio.Pin scl-pin-number
   bus := i2c.Bus --sda=sda-pin --scl=scl-pin --frequency=frequency
   scandevices := bus.scan
 
@@ -213,14 +209,6 @@ main:
   header.text   = "MAX1704x Battery Test"
   pixel-display.draw
 
-  // Get/keep time Updated to help with display/testing.
-  time-helper      = TimeHelper
-  time-zone-helper = TimezoneHelper
-  task:: time-zone-helper.update-data-from-internet
-  task:: time-zone-helper.update-timezone
-  time-helper.maintain-system-time-via-ntp
-  task:: update-screen
-
   // Setup INA226 (if present) - to validate measured values.
   if not scandevices.contains Ina226.I2C-ADDRESS:
     print "No ina226 device found"
@@ -231,7 +219,7 @@ main:
 
   // Setup TP4057 - comment out if not present.
   tp4057-exception      := catch --trace:
-    tp4057-driver  = Tp4057 --adc-pin=(gpio.Pin 0)
+    tp4057-driver  = Tp4057 --adc-pin=(gpio.Pin ESP32C6-BATTERY-ADC-PIN --input)
   if tp4057-exception:
     // No Tp4057 Device
   if tp4057-driver != null:
@@ -257,7 +245,7 @@ main:
   if not scandevices.contains Max1704x.I2C-ADDRESS:
     print "No MAX1704x device found [0x$(%02x Max1704x.I2C-ADDRESS)]"
   else:
-    max1704x-driver = Max1704x (bus.device Max1704x.I2C_ADDRESS)
+    max1704x-driver = Max1704x (bus.device Max1704x.I2C-ADDRESS)
     max1704x-driver.set-design-capacity-mah 3700.0
     max1704x-driver.set-design-capacity-wh 13.7
     max1704x-driver.set-sleep-mode-enabled true
@@ -272,14 +260,9 @@ update-screen-task -> none:
 update-screen -> none:
   cell-charge-rate/float := 0.0
   info0-r.text = "$(us-to-stopwatch time-start-us Time.monotonic-us)"
-  if time-helper != null:
-    info0-l.text = "$(time-helper.current-time)"
-  else:
-
 
   if max1704x-driver != null:
-    if time-helper == null:
-      info0-l.text        = "IC:$(%02d max1704x-driver.get-chip-version).$(%02d max1704x-driver.get-chip-id)"
+    info0-l.text           = "IC:$(%02d max1704x-driver.get-chip-version).$(%02d max1704x-driver.get-chip-id)"
     vcell-label.text       = "$(%0.3f max1704x-driver.read-cell-voltage)v"
     soc-label.text         = "$(%0.2f max1704x-driver.read-cell-state-of-charge)%"
     soc-rate-label.text    = "$(%0.2f max1704x-driver.read-cell-charge-rate)%/h"
