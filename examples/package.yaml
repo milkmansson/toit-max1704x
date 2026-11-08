@@ -23,8 +23,6 @@ dependencies:
   ssd1306:
     url: github.com/toitware/toit-ssd1306
     version: ^2.0.1
-  timehelper:
-    path: ../../toit-timehelper
   tp4057:
     url: github.com/milkmansson/toit-tp4057
     version: ^1.0.0
