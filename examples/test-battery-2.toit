@@ -245,7 +245,7 @@ main:
   if not scandevices.contains Max1704x.I2C-ADDRESS:
     print "No MAX1704x device found [0x$(%02x Max1704x.I2C-ADDRESS)]"
   else:
-    max1704x-driver = Max1704x (bus.device Max1704x.I2C_ADDRESS)
+    max1704x-driver = Max1704x (bus.device Max1704x.I2C-ADDRESS)
     max1704x-driver.set-design-capacity-mah 3700.0
     max1704x-driver.set-design-capacity-wh 13.7
     max1704x-driver.set-sleep-mode-enabled true

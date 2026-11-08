@@ -1,4 +1,3 @@
-
 // Copyright (C) 2025 Toit Contributors
 // Use of this source code is governed by an MIT-style license that can be
 // found in the package's LICENSE file.   This file also includes derivative
@@ -12,8 +11,12 @@ import serial.device as serial
 import serial.registers as registers
 import log
 
-/** Toit Driver library for MAX17048/MAX17049 ICs */
+/**
+Toit driver for the MAX17048/MAX17049 single and dual cell LiPo fuel gauge ICs.
 
+See the README for details on the alerts, sleep, hibernation and quick-start
+  features.
+*/
 class Max1704x:
 
   static I2C-ADDRESS                   ::= 0x36   // Not configurable
@@ -21,7 +24,7 @@ class Max1704x:
   // Datasheet page 11.
   static REG-CONFIG_                   ::= 0x0C   // Configuration register
   static REG-STATUS_                   ::= 0x1A   // Current alert/status
-  static REG_MODE_                     ::= 0x06   // Mode register
+  static REG-MODE_                     ::= 0x06   // Mode register
 
   static REG-SOC_                      ::= 0x04   // Cell state of charge register
   static REG-CELL-VOLTAGE_             ::= 0x02   // Cell voltage register
@@ -30,8 +33,8 @@ class Max1704x:
   static REG-VOLTAGE-RESET-ID_         ::= 0x18   // Reset voltage settings (and ID) register
   static REG-VOLTAGE-ALERT_            ::= 0x14   // Voltage alert values register
 
-  static REG_HIBERNATE_                ::= 0x0A   // Hibernation configuration register
-  static REG_VERSION_                  ::= 0x08   // Holds IC version
+  static REG-HIBERNATE_                ::= 0x0A   // Hibernation configuration register
+  static REG-VERSION_                  ::= 0x08   // Holds IC version
 
   static REG-CMD_                      ::= 0xFE   // Register that can be written for special commands
 
@@ -55,7 +58,7 @@ class Max1704x:
   static HIBERNATE-DIS-ANALOG-CO-MASK_ ::= 0b00000001_00000000
   static CHIP-ID-MASK_                 ::= 0b00000000_11111111
 
-  // For use with $REG-HIBERNATE-
+  // For use with $REG-HIBERNATE_
   static HIBERNATE-HIB-THRESHOLD-MASK_ ::= 0b11111111_00000000
   static HIBERNATE-ACT-THRESHOLD-MASK_ ::= 0b00000000_11111111
 
@@ -111,12 +114,12 @@ class Max1704x:
     cells_ = variant == VARIANT-MAX17049 ? 2 : 1
 
   /**
-  $reset:
+  Resets the device.
 
-  Writing a value of 0x5400 to this register causes the device to completely
-   reset as if power had been removed (see the Power-On Reset (POR) section).
-   The reset occurs when the last bit has been clocked in. The IC does not
-   respond with an I2C ACK after this command sequence.
+  Writing a value of 0x5400 to the command register causes the device to
+   completely reset as if power had been removed (see the Power-On Reset (POR)
+   section).  The reset occurs when the last bit has been clocked in. The IC does
+   not respond with an I2C ACK after this command sequence.
 
   The first SOC update is available approximately 1s after the reset, so allow
    for that before relying on $read-cell-state-of-charge.  A reset includes a
@@ -137,9 +140,7 @@ class Max1704x:
       if get-reset-indicator_:
         logger_.warn "reset: reset-indicator not cleared. Ignoring..."
 
-  /**
-  Returns True or False based on whether the Reset Indicator is tripped
-  */
+  /** Whether the Reset Indicator is tripped. */
   get-reset-indicator_ -> bool:
     out := read-register_ REG-STATUS_ --mask=STATUS-RESET-INDICATOR
     return (out == 1)
@@ -150,35 +151,27 @@ class Max1704x:
   clear-reset-indicator_ -> none:
     write-register_ REG-STATUS_ 0 --mask=STATUS-RESET-INDICATOR
 
-  /**
-  Gets Chip Version.  Indicates the production version of the IC
-  */
+  /** Gets the chip version.  Indicates the production version of the IC. */
   get-chip-version -> int:
-    out := read-register_ REG-VERSION_
-    //logger_.debug "get-ic-version: returned $(bits-16 out) [0x$(%04x out)]"
-    return out
+    return read-register_ REG-VERSION_
 
   /**
   Gets Chip ID. (Datasheet pp13).
 
-  Value that is one-time program-mable at the factory, which can be used as
+  Value that is one-time programmable at the factory, which can be used as
    an identifier to distinguish multiple cell types in production.
   */
   get-chip-id -> int:
-    out := read-register_ REG-VOLTAGE-RESET-ID_ --mask=CHIP-ID-MASK_
-    //logger_.debug "get-ic-version: returned $(bits-16 out)"
-    return out
+    return read-register_ REG-VOLTAGE-RESET-ID_ --mask=CHIP-ID-MASK_
 
   /**
-  Gets RCOMP values from the IC. (See Datasheet and README.md)
+  Gets the RCOMP value from the IC. (See Datasheet and README)
   */
   get-rcomp-value -> int:
-    out := read-register_ REG-CONFIG_ --mask=CHEMISTRY-RCOMP-MASK_
-    logger_.debug "get-rcomp-value: returned $(%04x out)"
-    return out
+    return read-register_ REG-CONFIG_ --mask=CHEMISTRY-RCOMP-MASK_
 
   /**
-  Sets RCOMP values in the IC. (See Datasheet and README.md)
+  Sets the RCOMP value in the IC. (See Datasheet and README)
   */
   set-rcomp-value value/int -> none:
     write-register_ REG-CONFIG_ value --mask=CHEMISTRY-RCOMP-MASK_
@@ -208,57 +201,69 @@ class Max1704x:
   /**
   Determines if an alert exists.
 
-  When this bit is set, the ALRT pin asserts (is low). Use clear-alert to de-assert
-   the ALRT pin. The STATUS register specifies why the ALRT pin was asserted
+  When this bit is set, the ALRT pin asserts (is low). Use $clear-alert to de-assert
+   the ALRT pin. The STATUS register ($read-status-raw) specifies why the ALRT
+   pin was asserted.
   */
   alert -> bool:
     out := read-register_ REG-CONFIG_ --mask=ALERT-MASK_
     return out == 1
 
-  /**
-  Clears an alert by the IC when an alert occurs.
-  */
+  /** Clears the alert, which de-asserts the ALRT pin. */
   clear-alert -> none:
     write-register_ REG-CONFIG_ 0 --mask=ALERT-MASK_
 
   /**
-  Sets the 'SOC is empty now' alert threshold.  See README.md
+  Sets the 'SOC is empty now' alert $threshold, in percent (1 to 32).
+
+  See the README.
   */
-  set-SOC-empty-alert-threshold threshold/int -> none:
+  set-soc-empty-alert-threshold threshold/int -> none:
     if not 1 <= threshold <= 32: throw "OUT_OF_RANGE"
-    write-register_  REG-CONFIG_ (32 - threshold) --mask=EMPTY-ALERT-THRESHOLD-MASK_
+    write-register_ REG-CONFIG_ (32 - threshold) --mask=EMPTY-ALERT-THRESHOLD-MASK_
 
   /**
-  Gets the 'SOC is empty now' alert threshold.  See README.md
+  Gets the 'SOC is empty now' alert threshold, in percent.
+
+  See the README.
   */
-  get-SOC-empty-alert-threshold -> int:
+  get-soc-empty-alert-threshold -> int:
     out := read-register_ REG-CONFIG_ --mask=EMPTY-ALERT-THRESHOLD-MASK_
     return (32 - out)
 
-  /**
-  Enable the ability to enter ultra-low-power sleep mode.
+  /** Deprecated.  Use $set-soc-empty-alert-threshold. */
+  set-SOC-empty-alert-threshold threshold/int -> none:
+    set-soc-empty-alert-threshold threshold
 
-  Use True to enable sleep mode (1uA draw) - False to only allow hibernation
+  /** Deprecated.  Use $get-soc-empty-alert-threshold. */
+  get-SOC-empty-alert-threshold -> int:
+    return get-soc-empty-alert-threshold
+
+  /**
+  Enables the ability to enter ultra-low-power sleep mode.
+
+  Use true for $enabled to enable sleep mode (1uA draw), false to only allow
+    hibernation.
   */
-  set-sleep-mode-enabled enabled/bool=false -> none:
-    // MODE is a write-only register (apart from HibStat), so it is written
-    // whole rather than read-modified-written.  This way a stale Quick-Start
-    // bit can never be written back, which would trigger another quick-start.
+  set-sleep-mode-enabled enabled/bool -> none:
+    // MODE is written whole rather than read-modified-written.  This way a
+    // stale Quick-Start bit can never be written back, which would trigger
+    // another quick-start.
     write-register_ REG-MODE_ (enabled ? MODE-SLEEP-ENABLED-MASK_ : 0)
 
   /**
   Whether the device has the ability to enter ultra-low-power sleep mode.
 
-  Use True to enable sleep mode (1uA draw) - False to only allow hibernation
+  See $set-sleep-mode-enabled.
   */
   get-sleep-mode-enabled -> bool:
     value := read-register_ REG-MODE_ --mask=MODE-SLEEP-ENABLED-MASK_
     return (value == 1)
 
   /**
-  Sleeps the device - Forces device into sleep mode - now.
+  Forces the device into sleep mode, now.
 
-  Requires Sleep Mode be enabled beforehand.
+  Requires sleep mode to be enabled beforehand, see $set-sleep-mode-enabled.
   */
   force-sleep-now -> none:
     if get-sleep-mode-enabled:
@@ -267,9 +272,9 @@ class Max1704x:
       logger_.error "sleep-now: Cannot sleep now as sleep mode not enabled."
 
   /**
-  Wakes the device - forces device out of sleep mode - now.
+  Forces the device out of sleep mode, now.
 
-  Requires Sleep Mode be enabled beforehand.
+  Requires sleep mode to be enabled beforehand, see $set-sleep-mode-enabled.
   */
   force-wake-now -> none:
     if get-sleep-mode-enabled:
@@ -278,31 +283,31 @@ class Max1704x:
       logger_.error "wake-now: Cannot wake now as sleep mode not enabled."
 
   /**
-  Set hibernation activity threshold. See README.md or Datasheet.
+  Sets the hibernation activity threshold, in volts. See the README or Datasheet.
   */
-  set-hibernation-act-threshold volts/float -> none:
+  set-hibernation-act-threshold volts/num -> none:
     value := to-raw_ volts hibernation-lsb-v_ 0xFF
-    write-register_ REG_HIBERNATE_ value --mask=HIBERNATE-ACT-THRESHOLD-MASK_
+    write-register_ REG-HIBERNATE_ value --mask=HIBERNATE-ACT-THRESHOLD-MASK_
 
   /**
-  Get hibernation activity threshold. See README.md or Datasheet.
+  Gets the hibernation activity threshold, in volts. See the README or Datasheet.
   */
   get-hibernation-act-threshold -> float:
-    value := read-register_ REG_HIBERNATE_ --mask=HIBERNATE-ACT-THRESHOLD-MASK_
+    value := read-register_ REG-HIBERNATE_ --mask=HIBERNATE-ACT-THRESHOLD-MASK_
     return value * hibernation-lsb-v_
 
   /**
   Sets hibernate threshold: the %/hour change triggering hibernation of the IC.
   */
-  set-hibernation-hib-threshold percent/float -> none:
+  set-hibernation-hib-threshold percent/num -> none:
     value := to-raw_ percent charge-rate-lsb-pct_ 0xFF
-    write-register_ REG_HIBERNATE_ value --mask=HIBERNATE-HIB-THRESHOLD-MASK_
+    write-register_ REG-HIBERNATE_ value --mask=HIBERNATE-HIB-THRESHOLD-MASK_
 
   /**
   Gets hibernate threshold: the %/hour change triggering hibernation of the IC.
   */
   get-hibernation-hib-threshold -> float:
-    value := read-register_ REG_HIBERNATE_ --mask=HIBERNATE-HIB-THRESHOLD-MASK_
+    value := read-register_ REG-HIBERNATE_ --mask=HIBERNATE-HIB-THRESHOLD-MASK_
     return value * charge-rate-lsb-pct_
 
   /**
@@ -312,17 +317,17 @@ class Max1704x:
   To always use hibernate mode, set entire register = 0xFFFF. [See Datasheet pp.12]
   */
   set-hibernate-mode-disabled -> none:
-    write-register_ REG_HIBERNATE_ 0x0000
+    write-register_ REG-HIBERNATE_ 0x0000
 
   /**
   Sets the hibernate mode to be forced on, with maximum settings:
 
   Datasheet states that setting both hibernation registers to maximum will
-    'enable' hibernation.  The device will be configured t its maximum values.
+    'enable' hibernation.  The device will be configured to its maximum values.
     [See Datasheet pp.12]
   */
   set-hibernate-mode-enabled -> none:
-    write-register_ REG_HIBERNATE_ 0xFFFF
+    write-register_ REG-HIBERNATE_ 0xFFFF
 
   /**
   Whether hibernate mode is enabled.
@@ -335,14 +340,18 @@ class Max1704x:
     return (act-t > 0) and (hib-t > 0)
 
   /**
-  Sets the Analog Comparator for Hibernation.  See README.md and Datasheet.
+  Enables or disables the analog comparator used in hibernation.
+
+  See the README and Datasheet.
   */
-  set-hibernate-analog-comparator-enabled enabled/bool=true -> none:
+  set-hibernate-analog-comparator-enabled enabled/bool -> none:
     value := enabled ? 0 : 1
     write-register_ REG-VOLTAGE-RESET-ID_ value --mask=HIBERNATE-DIS-ANALOG-CO-MASK_
 
   /**
-  Get Analog Comparator setting for Hibernation.  See README.md and Datasheet.
+  Whether the analog comparator used in hibernation is enabled.
+
+  See the README and Datasheet.
   */
   get-hibernate-analog-comparator-enabled -> bool:
     value := read-register_ REG-VOLTAGE-RESET-ID_ --mask=HIBERNATE-DIS-ANALOG-CO-MASK_
@@ -351,7 +360,7 @@ class Max1704x:
   /**
   Sets alert-min voltage - Alerts when V(cell) < V(alert-min).
   */
-  set-voltage-alert-min voltage/float -> none:
+  set-voltage-alert-min voltage/num -> none:
     value := to-raw_ voltage voltage-alert-lsb-v_ 0xFF
     write-register_ REG-VOLTAGE-ALERT_ value --mask=ALERT-VOLTAGE-MIN-MASK_
 
@@ -365,7 +374,7 @@ class Max1704x:
   /**
   Sets the alert-max voltage - Alerts when V(cell) > V(alert-max).
   */
-  set-voltage-alert-max voltage/float -> none:
+  set-voltage-alert-max voltage/num -> none:
     value := to-raw_ voltage voltage-alert-lsb-v_ 0xFF
     write-register_ REG-VOLTAGE-ALERT_ value --mask=ALERT-VOLTAGE-MAX-MASK_
 
@@ -377,26 +386,26 @@ class Max1704x:
     return value * voltage-alert-lsb-v_
 
   /**
-  Enables voltage reset alert.
+  Enables or disables the voltage reset alert.
 
-  When set, asserts the ALRT pin when a voltage-reset event occurs under the
-  conditions described by the VRESET/ ID register.
+  When enabled, asserts the ALRT pin when a voltage-reset event occurs under the
+    conditions described by the VRESET/ID register.
   */
-  set-vreset-alert-enabled enabled/bool=false -> none:
-    value := (enabled ? 1 : 0)
-    write-register_ REG-STATUS_ value --mask=VRESET-ALERT-ENABLE-MASK_
+  set-vreset-alert-enabled enabled/bool -> none:
+    update-status_
+        --mask=VRESET-ALERT-ENABLE-MASK_
+        --value=(enabled ? VRESET-ALERT-ENABLE-MASK_ : 0)
 
   /** Whether the voltage reset alert is enabled. */
   get-vreset-alert-enabled -> bool:
-    value := read-register_ REG-STATUS_ --mask=VRESET-ALERT-ENABLE-MASK_
-    return value == 1
+    return (read-register_ REG-STATUS_ --mask=VRESET-ALERT-ENABLE-MASK_) == 1
 
   /**
-  Enables the alert when the state of charge changes by at least 1%.
+  Enables or disables the alert when the state of charge changes by at least 1%.
 
   The change is reported with $STATUS-SOC-CHANGE, and asserts the ALRT pin.
   */
-  set-soc-change-alert-enabled enabled/bool=false -> none:
+  set-soc-change-alert-enabled enabled/bool -> none:
     write-register_ REG-CONFIG_ (enabled ? 1 : 0) --mask=ALERT-SOC-CHANGE-MASK_
 
   /** Whether the state-of-charge change alert is enabled. */
@@ -404,29 +413,25 @@ class Max1704x:
     return (read-register_ REG-CONFIG_ --mask=ALERT-SOC-CHANGE-MASK_) == 1
 
   /**
-  $check-status: checks a status flag against the current alert register.
+  Checks whether the given status $flag is set.
 
-  Returns true or false if the specified alert is set. (STATUS-*** statics above)
+  The $flag is one of the STATUS-* statics, for example $STATUS-VOLTAGE-LOW.
   */
-  check-status alert/int -> bool:
-    return (read-status-raw & alert) != 0
+  check-status flag/int -> bool:
+    return (read-status-raw & flag) != 0
 
-  /**
-  Reads the raw status value register (also useful for troubleshooting)
-  */
+  /** Reads the raw status register (also useful for troubleshooting). */
   read-status-raw -> int:
-    value := read-register_ REG-STATUS_
-    return value
+    return read-register_ REG-STATUS_
 
   /**
   Clears the given status $flags (one or more of the STATUS-* statics).
 
-  Flags are cleared by writing zero.  Other bits, including the voltage reset
-    alert enable, are left as they were.
+  Other bits, including the voltage reset alert enable, are left as they were.
   */
   clear-status-flags flags/int -> none:
     if flags & ~STATUS-ALL-ALERTS_ != 0: throw "INVALID_ARGUMENT"
-    write-register_ REG-STATUS_ ((read-status-raw) & ~flags)
+    update-status_ --clear-flags=flags
 
   /**
   Reads cell charge-rate - as % change per hour. (Not for conversion to amps).
@@ -473,50 +478,47 @@ class Max1704x:
   /**
   Execute a 'Quickstart'.
 
-  Use with caution.  See README.md, and Datasheet page 9.
+  Use with caution.  See the README, and Datasheet page 9.
   */
   set-quickstart -> none:
-    // See $set-sleep-mode-enabled: MODE is written whole.  Keep the sleep setting.
+    // MODE is written whole, see $set-sleep-mode-enabled.  Keep the sleep setting.
     sleep-bit := get-sleep-mode-enabled ? MODE-SLEEP-ENABLED-MASK_ : 0
     write-register_ REG-MODE_ (MODE-QUICK-START-MODE-MASK_ | sleep-bit)
 
   /**
-  Sets the voltage the IC considers a 'reset'.  See README.md and/or Datasheet.
+  Sets the voltage the IC considers a 'reset'.  See the README and/or Datasheet.
 
   The datasheet guarantees the 2.28V to 3.48V range, in 40mV steps.
   */
-  set-reset-voltage voltage/float -> none:
+  set-reset-voltage voltage/num -> none:
     value := to-raw_ voltage voltage-reset-lsb-v_ 0x7F   // 7 bit field
     write-register_ REG-VOLTAGE-RESET-ID_ value --mask=VRESET-MASK_
 
   /**
-  Gets the voltage the IC considers a 'reset'.  See README.md and/or Datasheet.
+  Gets the voltage the IC considers a 'reset'.  See the README and/or Datasheet.
   */
   get-reset-voltage -> float:
     value := read-register_ REG-VOLTAGE-RESET-ID_ --mask=VRESET-MASK_
     return (value * voltage-reset-lsb-v_)
 
-  /**
-  NOT YET IMPLEMENTED: TABLE Registers (0x40 to 0x7F)
-  Datasheets require contact with Maxim for details on how to configure these
-  registers. The default value is appropriate for some Li+ batteries.
+  // NOT YET IMPLEMENTED: TABLE Registers (0x40 to 0x7F)
+  // Datasheets require contact with Maxim for details on how to configure these
+  // registers. The default value is appropriate for some Li+ batteries.
+  //
+  // To unlock the TABLE registers, write 0x57 to address 0x3F, and 0x4A to
+  // address 0x3E. While TABLE is unlocked, no ModelGauge registers are updated,
+  // so relock as soon as possible by writing 0x00 to address 0x3F, and 0x00 to
+  // address 0x3E.
 
-  To unlock the TABLE registers, write 0x57 to address 0x3F, and 0x4A to
-  address 0x3E. While TABLE is unlocked, no ModelGauge registers are updated,
-  so relock as soon as possible by writing 0x00 to address 0x3F, and 0x00 to
-  address 0x3E.
-  */
-
-  /** EXPERIMENTAL
-
-  The following functions are created somewhat experimentally.  The health and
-  actual capacities of batteries change over time, as well as actual values
-  varying by things like temperature and stress.  Please consider these
-  experimental in nature.
-
-  Given the design-capacity-mah_ and design-capacity-wh_, several other pieces
-  of information can be derived.
-  */
+  // EXPERIMENTAL
+  //
+  // The following functions are created somewhat experimentally.  The health and
+  // actual capacities of batteries change over time, as well as actual values
+  // varying by things like temperature and stress.  Please consider these
+  // experimental in nature.
+  //
+  // Given the design capacity (mAh and Wh), several other pieces of information
+  // can be derived.
   design-capacity-mah_/float := 0.0
   design-capacity-wh_/float  := 0.0
 
@@ -563,9 +565,13 @@ class Max1704x:
   The charge rate (in %/hour) that the given battery current (in amps) is
     expected to cause.  Requires $set-design-capacity-mah.
   */
-  estimate-expected-crate-pct_per_hr --current-a/num -> float:
+  estimate-expected-charge-rate --current-a/num -> float:
     if design-capacity-mah_ <= 0.0: throw "design capacity (mAh) not set"
     return (current-a * 1000.0 / design-capacity-mah_) * 100.0
+
+  /** Deprecated.  Use $estimate-expected-charge-rate. */
+  estimate-expected-crate-pct_per_hr --current-a/num -> float:
+    return estimate-expected-charge-rate --current-a=current-a
 
   /**
   Estimates the effective capacity (in mAh) from the present current (in amps)
@@ -574,7 +580,6 @@ class Max1704x:
   Returns null if the charge rate is too close to zero for a meaningful result.
   */
   estimate-effective-capacity-mah --current-a/num --charge-rate-pct/float=(read-cell-charge-rate) -> float?:
-    if design-capacity-mah_ <= 0.0: throw "design capacity (mAh) not set"
     if charge-rate-pct.abs < 0.05: return null    // Too small to be reliable.
     return (current-a * 1000.0).abs * 100.0 / charge-rate-pct.abs
 
@@ -582,8 +587,10 @@ class Max1704x:
   Estimates the state of health (in %): effective capacity vs design capacity.
 
   Returns null if it cannot be determined, see $estimate-effective-capacity-mah.
+    Requires $set-design-capacity-mah.
   */
   estimate-state-of-health --current-a/num -> float?:
+    if design-capacity-mah_ <= 0.0: throw "design capacity (mAh) not set"
     effective := estimate-effective-capacity-mah --current-a=current-a
     if effective == null: return null
     return 100.0 * effective / design-capacity-mah_
@@ -651,21 +658,16 @@ class Max1704x:
       reg_.write-u16-be register new-value
 
   /**
-  Display bitmasks nicely - useful when testing.
+  Writes the STATUS register without clearing an alert flag by accident.
+
+  The flag bits are cleared by writing 0 and are not affected by writing 1.  So
+    all flags are written as 1, except those in $clear-flags.  A flag that is
+    raised while this runs is therefore kept.  The bits in $mask are set to the
+    corresponding bits of $value, and all other bits keep their value.
   */
-  bits-16 x/int --min-display-bits/int=0 -> string:
-    if (x > 255) or (min-display-bits > 8):
-      out-string := "$(%b x)"
-      out-string = out-string.pad --left 16 '0'
-      out-string = "$(out-string[0..4]).$(out-string[4..8]).$(out-string[8..12]).$(out-string[12..16])"
-      return out-string
-    else if (x > 15) or (min-display-bits > 4):
-      out-string := "$(%b x)"
-      out-string = out-string.pad --left 8 '0'
-      out-string = "$(out-string[0..4]).$(out-string[4..8])"
-      return out-string
-    else:
-      out-string := "$(%b x)"
-      out-string = out-string.pad --left 4 '0'
-      out-string = "$(out-string[0..4])"
-      return out-string
+  update-status_ --mask/int=0 --value/int=0 --clear-flags/int=0 -> none:
+    current := read-status-raw
+    new-value := (current & ~STATUS-ALL-ALERTS_ & ~mask)
+        | (value & mask)
+        | (STATUS-ALL-ALERTS_ & ~clear-flags)
+    write-register_ REG-STATUS_ new-value

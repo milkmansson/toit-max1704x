@@ -62,8 +62,8 @@ value without writing it.  (Also see RCOMP)
 A threshold of the State of Charge (%) where an interrupt is generated (on the
 ALRT pin) once the charge drops below the set level.  This is for the purposes
 of alerting a microcontroller, such that it has the opportunity to get ready for
-the pending power off event.  The function `set-SOC-empty-alert-threshold` and
-`get-SOC-empty-alert-threshold` are used for this.  Valid values are from 32%
+the pending power off event.  The function `set-soc-empty-alert-threshold` and
+`get-soc-empty-alert-threshold` are used for this.  Valid values are from 32%
 down to 1%; anything else throws `OUT_OF_RANGE`.  `set-soc-change-alert-enabled`
 additionally raises an alert whenever SOC changes by 1%.
 
@@ -199,7 +199,18 @@ discharging (or charging, for `estimate-hours-to-full`).  Unset design
 capacities throw an error.
 
 ## Usage
-Please see the examples folder.
+Please see the examples folder:
+- `simple-battery.toit`: prints voltage, state of charge and charge rate.  Needs
+  only the MAX1704x.
+- `alerts.toit`: sets the alert thresholds, trips one, and clears it.
+- `power-modes.toit`: hibernation and sleep.
+- `estimates.toit`: remaining capacity and run time estimates.
+- `temperature-compensation.toit`: sets RCOMP from the battery temperature.
+- `test-battery-2.toit`: a long running battery test using a display and other
+  sensors.  See the comments in the file.
+
+The examples take the pins from the `SDA-PIN` and `SCL-PIN` constants (19 and 20
+for the DFRobot FireBeetle 2 ESP32-C6).  Change them for other boards.
 
 ## Tests
 `tests/max1704x-test.toit` runs against a simulated register bank, so no
@@ -222,7 +233,6 @@ If there are any issues, changes, or any other kind of feedback, please
 [raise an issue](toit-max1704x/issues).
 
 ## Disclaimer
-- This driver has been written and tested with a MAX17048.
 - All trademarks belong to their respective owners.
 - No warranties for this work, express or implied.
 

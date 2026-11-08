@@ -51,6 +51,12 @@ class MockRegisters extends registers.Registers:
         power-on-defaults
       if nack-on-reset: throw "I2C_WRITE_FAILED"
       return
+    if register == 0x1A:
+      // The alert flags are cleared by writing 0 and ignore a written 1.
+      old := get-u16 0x1A
+      written := (data[0] << 8) | data[1]
+      set-u16 0x1A ((old & written & 0x3F00) | (written & ~0x3F00 & 0xFFFF))
+      return
     memory.replace register data
 
 class MockDevice implements serial.Device:
@@ -122,19 +128,24 @@ test-fields-do-not-clobber:
   d/Max1704x := pair[0]
   r/MockRegisters := pair[1]
   // Writing one field must leave its neighbours intact.
-  expect-equals 4 d.get-SOC-empty-alert-threshold         // power-on default
+  expect-equals 4 d.get-soc-empty-alert-threshold         // power-on default
   d.set-rcomp-value 0x55
   expect-equals 0x55 d.get-rcomp-value
   expect-equals 0x551C (r.get-u16 0x0C)       // ATHD = 32 - 4 = 28 = 0x1C
-  d.set-SOC-empty-alert-threshold 10
+  d.set-soc-empty-alert-threshold 10
   expect-equals 0x55 d.get-rcomp-value
-  expect-equals 10 d.get-SOC-empty-alert-threshold
+  expect-equals 10 d.get-soc-empty-alert-threshold
   expect-equals 0x5516 (r.get-u16 0x0C)       // ATHD = 22 = 0x16
-  d.set-SOC-empty-alert-threshold 4
+  d.set-soc-empty-alert-threshold 4
   d.set-soc-change-alert-enabled true
   expect-equals 0x555C (r.get-u16 0x0C)
   expect d.get-soc-change-alert-enabled
-  expect-equals 4 d.get-SOC-empty-alert-threshold
+  expect-equals 4 d.get-soc-empty-alert-threshold
+  // The deprecated names still work.
+  d.set-SOC-empty-alert-threshold 7
+  expect-equals 7 d.get-SOC-empty-alert-threshold
+  expect-equals 7 d.get-soc-empty-alert-threshold
+  d.set-soc-empty-alert-threshold 4
   expect-throw "OUT_OF_RANGE": d.set-rcomp-value 0x100
   expect-throw "OUT_OF_RANGE": d.set-rcomp-value -1
 
@@ -192,6 +203,8 @@ test-alerts:
   expect-equals 0x96FF (r.get-u16 0x14)
   expect-throw "OUT_OF_RANGE": d.set-voltage-alert-max 5.2
   expect-throw "OUT_OF_RANGE": d.set-voltage-alert-min -0.1
+  d.set-voltage-alert-min 3                 // Integers are accepted too.
+  expect-close 3.0 d.get-voltage-alert-min
   expect-equals 0x96FF (r.get-u16 0x14)     // failed writes changed nothing
 
   // ALRT bit: CONFIG bit 5.
@@ -201,15 +214,15 @@ test-alerts:
   d.clear-alert
   expect (not d.alert)
   expect-equals 0x97 d.get-rcomp-value
-  expect-equals 4 d.get-SOC-empty-alert-threshold
+  expect-equals 4 d.get-soc-empty-alert-threshold
 
   // SOC empty threshold covers 1..32%.
-  d.set-SOC-empty-alert-threshold 32
-  expect-equals 32 d.get-SOC-empty-alert-threshold
-  d.set-SOC-empty-alert-threshold 1
-  expect-equals 1 d.get-SOC-empty-alert-threshold
-  expect-throw "OUT_OF_RANGE": d.set-SOC-empty-alert-threshold 0
-  expect-throw "OUT_OF_RANGE": d.set-SOC-empty-alert-threshold 33
+  d.set-soc-empty-alert-threshold 32
+  expect-equals 32 d.get-soc-empty-alert-threshold
+  d.set-soc-empty-alert-threshold 1
+  expect-equals 1 d.get-soc-empty-alert-threshold
+  expect-throw "OUT_OF_RANGE": d.set-soc-empty-alert-threshold 0
+  expect-throw "OUT_OF_RANGE": d.set-soc-empty-alert-threshold 33
 
 test-reset-voltage-and-comparator:
   pair := new-driver
@@ -293,6 +306,15 @@ test-status-flags:
   expect d.get-vreset-alert-enabled                     // enable bit remains
   expect-throw "INVALID_ARGUMENT": d.clear-status-flags 0x0001
 
+  // Writing the status register never raises a flag.
+  d.set-vreset-alert-enabled false
+  expect (not d.get-vreset-alert-enabled)
+  expect (not (d.check-status Max1704x.STATUS-VOLTAGE-HIGH))
+  expect (not (d.check-status Max1704x.STATUS-SOC-LOW))
+  expect (d.check-status Max1704x.STATUS-SOC-CHANGE)
+  d.clear-status-flags Max1704x.STATUS-SOC-CHANGE | Max1704x.STATUS-RESET-INDICATOR
+  expect-equals 0 (r.get-u16 0x1A) & 0x3F00
+
 test-rcomp:
   // RCOMP = 0x97 + (T-20) * -0.5 above 20C, and + (T-20) * -5.0 below.
   expect-equals 0x97 (Max1704x.calculate-rcomp 20.0)
@@ -308,10 +330,10 @@ test-rcomp:
   pair := new-driver
   d/Max1704x := pair[0]
   r/MockRegisters := pair[1]
-  d.set-SOC-empty-alert-threshold 8
+  d.set-soc-empty-alert-threshold 8
   d.set-temperature-compensation 10.0
   expect-equals (0x97 + 50) d.get-rcomp-value
-  expect-equals 8 d.get-SOC-empty-alert-threshold
+  expect-equals 8 d.get-soc-empty-alert-threshold
   // Repeated calls must not accumulate.
   d.set-temperature-compensation 10.0
   d.set-temperature-compensation 10.0
@@ -366,6 +388,11 @@ test-estimates:
   expect-throw "design capacity (mAh) not set": d.estimate-mah-remaining
   expect-throw "design capacity (Wh) not set": d.estimate-wh-remaining
 
+  expect-throw "design capacity (mAh) not set": d.estimate-state-of-health --current-a=0.37
+  expect-throw "design capacity (mAh) not set": d.estimate-expected-charge-rate --current-a=0.37
+  // The effective capacity does not depend on the design capacity.
+  expect-close 3700.0 (d.estimate-effective-capacity-mah --current-a=0.37 --charge-rate-pct=-10.0) --tolerance=1e-6
+
   d.set-design-capacity-mah 3700
   d.set-design-capacity-wh 13.7
   r.set-u16 0x04 0x3200                     // 50%
@@ -378,8 +405,9 @@ test-estimates:
   expect-close 1e9 (d.estimate-hours-left --current-a=0.0)
 
   // 0.37 A on a 3700 mAh pack is 0.1 C = 10 %/h.
-  expect-close 10.0 (d.estimate-expected-crate-pct_per_hr --current-a=0.37) --tolerance=1e-9
-  expect-close -10.0 (d.estimate-expected-crate-pct_per_hr --current-a=-0.37) --tolerance=1e-9
+  expect-close 10.0 (d.estimate-expected-charge-rate --current-a=0.37) --tolerance=1e-9
+  expect-close -10.0 (d.estimate-expected-charge-rate --current-a=-0.37) --tolerance=1e-9
+  expect-close 10.0 (d.estimate-expected-crate-pct_per_hr --current-a=0.37) --tolerance=1e-9   // Deprecated name.
 
   // Hours left from charge rate: 50% at -10 %/h = 5 h.
   expect-close 5.0 (d.estimate-hours-left --charge-rate-pct=-10.0)
